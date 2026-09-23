@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { Clock3, Star } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { Clock3, Heart, Star } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
+import { useFavorites } from '../composables/useFavorites'
 import type { Recipe } from '../types/recipe'
 
-defineProps<{ recipe: Recipe }>()
+const props = withDefaults(defineProps<{ recipe: Recipe; headingLevel?: 2 | 3 }>(), {
+  headingLevel: 3,
+})
+const { isFavorite, toggleFavorite } = useFavorites()
+const saved = computed(() => isFavorite(props.recipe.id))
 </script>
 
 <template>
@@ -20,7 +26,7 @@ defineProps<{ recipe: Recipe }>()
       </div>
       <div class="recipe-card__content">
         <p class="recipe-card__cuisine">{{ recipe.cuisine }}</p>
-        <h3>{{ recipe.name }}</h3>
+        <component :is="headingLevel === 2 ? 'h2' : 'h3'">{{ recipe.name }}</component>
         <div class="recipe-card__meta">
           <span>
             <Clock3 :size="15" :stroke-width="1.7" aria-hidden="true" />
@@ -33,15 +39,49 @@ defineProps<{ recipe: Recipe }>()
         </div>
       </div>
     </RouterLink>
+    <button
+      class="recipe-card__save"
+      type="button"
+      :aria-label="`${saved ? 'Remove' : 'Add'} ${recipe.name} ${saved ? 'from' : 'to'} favorites`"
+      :aria-pressed="saved"
+      @click="toggleFavorite(recipe.id)"
+    >
+      <Heart
+        :size="21"
+        :stroke-width="1.8"
+        :fill="saved ? 'currentColor' : 'none'"
+        aria-hidden="true"
+      />
+    </button>
   </article>
 </template>
 
 <style scoped lang="scss">
 .recipe-card {
+  position: relative;
   min-width: 0;
   overflow: hidden;
   border-radius: var(--radius-sm);
   background: var(--color-surface);
+}
+
+.recipe-card__save {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-accent);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-accent-soft);
+  }
 }
 
 .recipe-card__link {
@@ -51,7 +91,7 @@ defineProps<{ recipe: Recipe }>()
   text-decoration: none;
 }
 
-.recipe-card__link:hover h3 {
+.recipe-card__link:hover :is(h2, h3) {
   color: var(--color-accent);
 }
 
@@ -81,7 +121,7 @@ defineProps<{ recipe: Recipe }>()
   text-transform: uppercase;
 }
 
-.recipe-card h3 {
+.recipe-card :is(h2, h3) {
   min-height: 2.5em;
   margin: 0;
   font-family: var(--font-display);
@@ -114,13 +154,13 @@ defineProps<{ recipe: Recipe }>()
 }
 
 @media (min-width: 640px) and (max-width: 1199px) {
-  .recipe-card h3 {
+  .recipe-card :is(h2, h3) {
     font-size: 1.15rem;
   }
 }
 
 @media (max-width: 639px) {
-  .recipe-card h3 {
+  .recipe-card :is(h2, h3) {
     min-height: 0;
     font-size: 1.25rem;
   }

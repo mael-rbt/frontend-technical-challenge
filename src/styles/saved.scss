@@ -1,0 +1,125 @@
+.saved-page {
+  min-height: calc(100vh - 4.5rem);
+  padding: clamp(2.5rem, 5vw, 4.5rem) 0 var(--space-2xl);
+}
+
+.saved-page__heading {
+  margin-bottom: 2.25rem;
+}
+
+.saved-page__heading h1,
+.saved-state h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.06;
+}
+
+.saved-page__heading h1 {
+  font-size: clamp(2.8rem, 5vw, 4rem);
+}
+
+.saved-page__heading p,
+.saved-state p {
+  margin: 0.6rem 0 0;
+  color: var(--color-text-muted);
+}
+
+.saved-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+
+.saved-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 45rem;
+  padding: clamp(2rem, 5vw, 4rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.saved-state > svg {
+  margin-bottom: 1.2rem;
+  color: var(--color-accent);
+}
+
+.saved-state h2 {
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+}
+
+.saved-state .button {
+  margin-top: 1.5rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.saved-page__notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.saved-page__notice p {
+  margin: 0;
+}
+
+.saved-page__notice button {
+  cursor: pointer;
+}
+
+.saved-skeleton {
+  padding-bottom: 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.saved-skeleton__image,
+.saved-skeleton span {
+  display: block;
+  border-radius: 0.5rem;
+  background: #eee7e0;
+}
+
+.saved-skeleton__image {
+  aspect-ratio: 4 / 3;
+  margin-bottom: 1rem;
+}
+
+.saved-skeleton span {
+  width: 75%;
+  height: 0.9rem;
+  margin: 0.5rem 0.8rem;
+}
+
+.saved-skeleton span:last-child {
+  width: 45%;
+}
+
+@media (max-width: 1023px) {
+  .saved-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .saved-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .saved-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -12,11 +12,11 @@ import { RouterLink } from 'vue-router'
       </RouterLink>
 
       <nav class="site-nav" aria-label="Main navigation">
-        <RouterLink class="site-nav__link" to="/" aria-current="page"> Explore </RouterLink>
-        <span class="site-nav__coming-soon" title="Coming in a later phase">
-          Saved<span class="visually-hidden"> (coming soon)</span>
+        <RouterLink class="site-nav__link" to="/">Explore</RouterLink>
+        <RouterLink class="site-nav__link" to="/saved">
+          Saved
           <Heart :size="21" :stroke-width="1.7" aria-hidden="true" />
-        </span>
+        </RouterLink>
       </nav>
     </div>
   </header>
@@ -69,26 +69,23 @@ import { RouterLink } from 'vue-router'
   font-size: 0.95rem;
 }
 
-.site-nav__link,
-.site-nav__coming-soon {
+.site-nav__link {
   display: inline-flex;
   align-items: center;
+  gap: 0.75rem;
   min-height: 2.75rem;
   color: var(--color-text);
   white-space: nowrap;
-}
-
-.site-nav__link {
-  border-bottom: 2px solid var(--color-accent);
+  border-bottom: 2px solid transparent;
   text-decoration: none;
+
+  &:hover,
+  &.router-link-exact-active {
+    border-bottom-color: var(--color-accent);
+  }
 }
 
-.site-nav__coming-soon {
-  gap: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.site-nav__coming-soon svg {
+.site-nav__link svg {
   color: var(--color-accent);
 }
 
@@ -106,7 +103,7 @@ import { RouterLink } from 'vue-router'
     font-size: 0.875rem;
   }
 
-  .site-nav__coming-soon {
+  .site-nav__link {
     gap: 0.45rem;
   }
 }

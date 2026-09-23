@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { ArrowLeft, ArrowRight, Star } from 'lucide-vue-next'
+import { ArrowLeft, ArrowRight, Heart, Star } from 'lucide-vue-next'
 import RecipeCard from '../components/RecipeCard.vue'
+import { useFavorites } from '../composables/useFavorites'
 import {
   ApiError,
   getRecipeById,
@@ -14,11 +15,13 @@ import tomatoCluster from '../assets/decor/tomato-cluster.png'
 import basilCorner from '../assets/decor/basil-corner.png'
 
 const route = useRoute()
+const { isFavorite, toggleFavorite } = useFavorites()
 const recipe = ref<Recipe | null>(null)
 const relatedRecipes = ref<Recipe[]>([])
 const checkedIngredients = ref<number[]>([])
 const loading = ref(true)
 const error = ref<'not-found' | 'request' | null>(null)
+const isSaved = computed(() => !!recipe.value && isFavorite(recipe.value.id))
 const allChecked = computed(
   () =>
     !!recipe.value?.ingredients.length &&
@@ -201,6 +204,17 @@ onUnmounted(() => controller?.abort())
                 <dd>{{ recipe.prepTimeMinutes + recipe.cookTimeMinutes }} min</dd>
               </div>
             </dl>
+            <button
+              class="button detail-hero__save"
+              :class="isSaved ? 'button--secondary' : 'button--primary'"
+              type="button"
+              :aria-label="`${isSaved ? 'Remove' : 'Add'} ${recipe.name} ${isSaved ? 'from' : 'to'} favorites`"
+              :aria-pressed="isSaved"
+              @click="toggleFavorite(recipe.id)"
+            >
+              <Heart :size="18" :fill="isSaved ? 'currentColor' : 'none'" aria-hidden="true" />
+              {{ isSaved ? 'Saved' : 'Save recipe' }}
+            </button>
           </div>
         </article>
 

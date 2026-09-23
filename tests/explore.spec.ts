@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import ExploreView from '../src/views/ExploreView.vue'
 import RecipeCard from '../src/components/RecipeCard.vue'
+import { useFavorites } from '../src/composables/useFavorites'
 import {
   getRecipeById,
   getRecipes,
@@ -76,6 +77,25 @@ describe('RecipeCard', () => {
     expect(wrapper.text()).toContain('35 min')
     expect(wrapper.text()).toContain('4.6 (98)')
     expect(wrapper.get('img').attributes('alt')).toContain('Classic Margherita Pizza')
+  })
+
+  it('toggles its accessible favorite control without changing the card link', async () => {
+    const favorites = useFavorites()
+    if (favorites.isFavorite(recipe.id)) favorites.toggleFavorite(recipe.id)
+    const wrapper = mount(RecipeCard, {
+      props: { recipe },
+      global: { stubs: { RouterLink: routerLinkStub } },
+    })
+    const button = wrapper.get('.recipe-card__save')
+    expect(button.attributes('aria-label')).toBe('Add Classic Margherita Pizza to favorites')
+    expect(button.attributes('aria-pressed')).toBe('false')
+    await button.trigger('click')
+    expect(button.attributes('aria-label')).toBe('Remove Classic Margherita Pizza from favorites')
+    expect(button.attributes('aria-pressed')).toBe('true')
+    expect(wrapper.find('a button').exists()).toBe(false)
+    await button.trigger('click')
+    expect(button.attributes('aria-pressed')).toBe('false')
+    wrapper.unmount()
   })
 })
 

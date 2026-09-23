@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import RecipeDetailView from '../src/views/RecipeDetailView.vue'
 import RecipeCard from '../src/components/RecipeCard.vue'
+import { useFavorites } from '../src/composables/useFavorites'
 import {
   ApiError,
   getRecipeById,
@@ -79,6 +80,21 @@ async function mountDetail(id = '1') {
 }
 
 describe('RecipeDetailView', () => {
+  it('uses the shared favorite state for the Save recipe button', async () => {
+    const favorites = useFavorites()
+    if (favorites.isFavorite(pizza.id)) favorites.toggleFavorite(pizza.id)
+    const { wrapper } = await mountDetail()
+    await flushPromises()
+    const button = wrapper.get('.detail-hero__save')
+    expect(button.text()).toBe('Save recipe')
+    await button.trigger('click')
+    expect(button.text()).toBe('Saved')
+    expect(button.attributes('aria-pressed')).toBe('true')
+    expect(favorites.isFavorite(pizza.id)).toBe(true)
+    favorites.toggleFavorite(pizza.id)
+    wrapper.unmount()
+  })
+
   it('loads a route ID and shows real fields and up to three other recipes', async () => {
     const { wrapper } = await mountDetail()
     await flushPromises()

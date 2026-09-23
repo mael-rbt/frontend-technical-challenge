@@ -115,4 +115,35 @@ describe('Explore page', () => {
     cy.get('h1').should('contain.text', 'Classic Margherita Pizza')
     cy.then(() => expect(attempts).to.eq(2))
   })
+
+  it('saves a recipe, restores it after refresh, and removes it from Saved', () => {
+    cy.clearLocalStorage('mise:favorites')
+    cy.visit('/')
+    cy.contains('.recipe-card', 'Classic Margherita Pizza')
+      .find('.recipe-card__save')
+      .click()
+      .should('have.attr', 'aria-pressed', 'true')
+    cy.window().then((window) => {
+      expect(window.localStorage.getItem('mise:favorites')).to.eq('[1]')
+    })
+    cy.get('.site-nav').contains('Saved').click()
+    cy.url().should('include', '/saved')
+    cy.contains('.recipe-card', 'Classic Margherita Pizza').should('be.visible')
+    cy.reload()
+    cy.contains('.recipe-card', 'Classic Margherita Pizza').should('be.visible')
+    cy.get('.recipe-card__save').click()
+    cy.contains('Nothing saved yet.').should('be.visible')
+    cy.window().then((window) => {
+      expect(window.localStorage.getItem('mise:favorites')).to.eq('[]')
+    })
+  })
+
+  it('opens Saved safely with corrupted browser storage', () => {
+    cy.visit('/saved', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem('mise:favorites', '{broken')
+      },
+    })
+    cy.contains('Nothing saved yet.').should('be.visible')
+  })
 })
