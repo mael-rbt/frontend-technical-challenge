@@ -69,6 +69,9 @@ function toggleSaved(event: MouseEvent) {
   overflow: hidden;
   border-radius: var(--radius-sm);
   background: var(--color-surface);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .recipe-card__save {
@@ -88,6 +91,14 @@ function toggleSaved(event: MouseEvent) {
   &:hover {
     background: var(--color-accent-soft);
   }
+}
+
+.recipe-card__save svg {
+  transition: transform var(--transition-fast);
+}
+
+.recipe-card__save:active svg {
+  transform: scale(0.86);
 }
 
 .recipe-card__link {
@@ -116,6 +127,30 @@ function toggleSaved(event: MouseEvent) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform var(--transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .recipe-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgb(50 35 20 / 6%);
+  }
+
+  .recipe-card:hover img {
+    transform: scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recipe-card,
+  .recipe-card img,
+  .recipe-card__save svg {
+    transition: none;
+  }
+
+  .recipe-card__save:active svg {
+    transform: none;
+  }
 }
 
 .recipe-card__content {

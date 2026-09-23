@@ -90,10 +90,10 @@
 }
 
 .detail-hero h1 {
-  max-width: 13ch;
+  max-width: 18ch;
   margin: 0.8rem 0 1.1rem;
   font-family: var(--font-display);
-  font-size: clamp(2.75rem, 4.8vw, 4.5rem);
+  font-size: clamp(2.75rem, 4vw, 4rem);
   font-weight: 400;
   letter-spacing: -0.025em;
   line-height: 1.02;
@@ -215,12 +215,36 @@
 }
 
 .detail-ingredients input {
+  display: grid;
+  place-content: center;
   flex: 0 0 auto;
   width: 1.25rem;
   height: 1.25rem;
   margin: 0;
-  accent-color: var(--color-accent);
+  appearance: none;
+  border: 1px solid var(--color-text-muted);
+  border-radius: 50%;
+  background: var(--color-surface);
   cursor: pointer;
+}
+
+.detail-ingredients input::before {
+  width: 0.65rem;
+  height: 0.65rem;
+  background: white;
+  clip-path: polygon(14% 50%, 40% 76%, 88% 24%, 100% 36%, 40% 94%, 2% 60%);
+  content: '';
+  transform: scale(0);
+  transition: transform var(--transition-fast);
+}
+
+.detail-ingredients input:checked {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.detail-ingredients input:checked::before {
+  transform: scale(1);
 }
 
 .detail-ingredients__checked span {

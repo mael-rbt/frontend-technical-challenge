@@ -91,12 +91,43 @@ body {
   color: var(--color-text);
   font-size: 0.82rem;
   line-height: 1.2;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.chip:not(.chip--active):hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-accent-soft);
 }
 
 .chip--active {
   border-color: var(--color-accent);
   background: var(--color-accent);
   color: white;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :is(
+    .featured-skeleton__image,
+    .featured-skeleton__copy span,
+    .recipe-skeleton__image,
+    .recipe-skeleton span,
+    .detail-skeleton__image,
+    .detail-skeleton__copy span,
+    .detail-skeleton__body span,
+    .saved-skeleton__image,
+    .saved-skeleton span
+  ) {
+    animation: skeleton-breathe 2s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes skeleton-breathe {
+  to {
+    background-color: #f5f0eb;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

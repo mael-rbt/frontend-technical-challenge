@@ -21,8 +21,8 @@ import {
   searchRecipes,
 } from '../services/recipes.api'
 import type { Recipe, RecipeListOptions, RecipesResponse } from '../types/recipe'
-import tomatoCluster from '../assets/decor/tomato-cluster.png'
-import basilCorner from '../assets/decor/basil-corner.png'
+import tomatoCluster from '../assets/decor/tomato-cluster.webp'
+import basilCorner from '../assets/decor/basil-corner.webp'
 
 const PAGE_SIZE = 12
 const SEARCH_DELAY = 300
@@ -210,17 +210,16 @@ onUnmounted(() => {
     <img
       class="explore-page__tomatoes"
       :src="tomatoCluster"
-      width="1374"
-      height="1145"
+      width="1000"
+      height="833"
       alt=""
       aria-hidden="true"
-      loading="lazy"
     />
     <img
       class="explore-page__basil"
       :src="basilCorner"
-      width="1335"
-      height="1178"
+      width="700"
+      height="618"
       alt=""
       aria-hidden="true"
       loading="lazy"

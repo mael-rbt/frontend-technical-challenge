@@ -429,6 +429,18 @@
   .recipe-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .discover__toolbar {
+    flex-direction: column;
+  }
+
+  .discover__chips {
+    width: 100%;
+  }
+
+  .discover__actions {
+    align-self: flex-end;
+  }
 }
 
 @media (max-width: 639px) {
@@ -451,10 +463,6 @@
     font-size: 0.8rem;
   }
 
-  .discover__toolbar {
-    flex-direction: column;
-  }
-
   .discover__chips {
     flex-wrap: nowrap;
     width: 100%;
@@ -463,6 +471,7 @@
   }
 
   .discover__actions {
+    align-self: auto;
     width: 100%;
     justify-content: flex-start;
   }
