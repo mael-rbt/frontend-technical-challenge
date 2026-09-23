@@ -149,8 +149,20 @@ function selectFilter(kind: DiscoveryFilter['kind'], value: string) {
   const current = selectedFilter.value
   selectedFilter.value = current?.kind === kind && current.value === value ? null : { kind, value }
   searchQuery.value = ''
-  if (filterPanel.value) filterPanel.value.open = false
+  if (filterPanel.value?.open) {
+    if (filterPanel.value.contains(document.activeElement)) {
+      filterPanel.value.querySelector('summary')?.focus()
+    }
+    filterPanel.value.open = false
+  }
   void loadDiscovery()
+}
+
+function closeFiltersOnEscape(event: KeyboardEvent) {
+  if (!filterPanel.value?.open) return
+  filterPanel.value.open = false
+  filterPanel.value.querySelector('summary')?.focus()
+  event.preventDefault()
 }
 
 function showAll() {
@@ -202,6 +214,7 @@ onUnmounted(() => {
       height="1145"
       alt=""
       aria-hidden="true"
+      loading="lazy"
     />
     <img
       class="explore-page__basil"
@@ -270,8 +283,8 @@ onUnmounted(() => {
       <section id="discover" class="discover" aria-labelledby="discover-title">
         <div class="discover__heading">
           <h2 id="discover-title">Discover</h2>
-          <p v-if="!loading" aria-live="polite">
-            {{ total }} {{ total === 1 ? 'recipe' : 'recipes' }}
+          <p role="status">
+            {{ loading ? 'Loading recipes…' : `${total} ${total === 1 ? 'recipe' : 'recipes'}` }}
           </p>
         </div>
 
@@ -301,7 +314,11 @@ onUnmounted(() => {
             </button>
           </div>
           <div class="discover__actions">
-            <details ref="filterPanel" class="discover__filter-panel">
+            <details
+              ref="filterPanel"
+              class="discover__filter-panel"
+              @keydown.esc="closeFiltersOnEscape"
+            >
               <summary class="chip">
                 <SlidersHorizontal :size="16" aria-hidden="true" />Filters<ChevronDown
                   :size="15"
@@ -362,7 +379,6 @@ onUnmounted(() => {
         </div>
 
         <template v-if="loading">
-          <p class="visually-hidden" role="status">Loading recipes…</p>
           <div class="recipe-grid" aria-hidden="true">
             <div v-for="index in 6" :key="index" class="recipe-skeleton">
               <div class="recipe-skeleton__image"></div>

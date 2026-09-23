@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Heart } from 'lucide-vue-next'
 import RecipeCard from '../components/RecipeCard.vue'
@@ -11,6 +11,9 @@ const { favoriteIds } = useFavorites()
 const fetchedRecipes = ref<Recipe[]>([])
 const loading = ref(false)
 const error = ref(false)
+const savedGrid = ref<HTMLElement | null>(null)
+const emptyHeading = ref<HTMLElement | null>(null)
+const retryButton = ref<HTMLElement | null>(null)
 const savedRecipes = computed(() =>
   favoriteIds.value.flatMap((id) => {
     const recipe = fetchedRecipes.value.find((item) => item.id === id)
@@ -44,6 +47,16 @@ async function loadSaved() {
   loading.value = false
 }
 
+async function restoreFocusAfterRemoval(index: number, event: MouseEvent) {
+  // Keyboard-generated clicks have detail 0; pointer users keep their scroll position.
+  if (event.detail !== 0) return
+  await nextTick()
+  const links = savedGrid.value?.querySelectorAll<HTMLAnchorElement>('.recipe-card__link')
+  const target =
+    links?.[Math.min(index, links.length - 1)] ?? emptyHeading.value ?? retryButton.value
+  target?.focus()
+}
+
 onMounted(() => void loadSaved())
 onUnmounted(() => controller?.abort())
 </script>
@@ -58,7 +71,7 @@ onUnmounted(() => controller?.abort())
 
       <section v-if="favoriteIds.length === 0" class="saved-state" aria-labelledby="saved-empty">
         <Heart :size="34" :stroke-width="1.4" aria-hidden="true" />
-        <h2 id="saved-empty">Nothing saved yet.</h2>
+        <h2 id="saved-empty" ref="emptyHeading" tabindex="-1">Nothing saved yet.</h2>
         <p>Keep the recipes you love close at hand.</p>
         <RouterLink class="button button--primary" to="/">Explore recipes</RouterLink>
       </section>
@@ -81,7 +94,9 @@ onUnmounted(() => controller?.abort())
       >
         <h2 id="saved-error">We couldn't load your saved recipes.</h2>
         <p>Your favorites are still saved. Please try again.</p>
-        <button class="button button--primary" type="button" @click="loadSaved">Try again</button>
+        <button ref="retryButton" class="button button--primary" type="button" @click="loadSaved">
+          Try again
+        </button>
       </section>
 
       <template v-else>
@@ -91,12 +106,13 @@ onUnmounted(() => controller?.abort())
             Try again
           </button>
         </div>
-        <div class="saved-grid">
+        <div ref="savedGrid" class="saved-grid">
           <RecipeCard
-            v-for="recipe in savedRecipes"
+            v-for="(recipe, index) in savedRecipes"
             :key="recipe.id"
             :recipe="recipe"
             :heading-level="2"
+            @favorite-toggled="restoreFocusAfterRemoval(index, $event)"
           />
         </div>
       </template>

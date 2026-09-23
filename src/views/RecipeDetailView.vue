@@ -99,6 +99,7 @@ onUnmounted(() => controller?.abort())
       height="1145"
       alt=""
       aria-hidden="true"
+      loading="lazy"
     />
     <img
       class="detail-page__basil"

@@ -8,8 +8,14 @@ import type { Recipe } from '../types/recipe'
 const props = withDefaults(defineProps<{ recipe: Recipe; headingLevel?: 2 | 3 }>(), {
   headingLevel: 3,
 })
+const emit = defineEmits<{ favoriteToggled: [event: MouseEvent] }>()
 const { isFavorite, toggleFavorite } = useFavorites()
 const saved = computed(() => isFavorite(props.recipe.id))
+
+function toggleSaved(event: MouseEvent) {
+  toggleFavorite(props.recipe.id)
+  emit('favoriteToggled', event)
+}
 </script>
 
 <template>
@@ -44,7 +50,7 @@ const saved = computed(() => isFavorite(props.recipe.id))
       type="button"
       :aria-label="`${saved ? 'Remove' : 'Add'} ${recipe.name} ${saved ? 'from' : 'to'} favorites`"
       :aria-pressed="saved"
-      @click="toggleFavorite(recipe.id)"
+      @click="toggleSaved"
     >
       <Heart
         :size="21"
@@ -89,6 +95,10 @@ const saved = computed(() => isFavorite(props.recipe.id))
   height: 100%;
   color: inherit;
   text-decoration: none;
+
+  &:focus-visible {
+    outline-offset: -3px;
+  }
 }
 
 .recipe-card__link:hover :is(h2, h3) {
@@ -128,6 +138,7 @@ const saved = computed(() => isFavorite(props.recipe.id))
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.22;
+  overflow-wrap: anywhere;
 }
 
 .recipe-card__meta {

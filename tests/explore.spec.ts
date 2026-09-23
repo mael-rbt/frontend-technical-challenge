@@ -196,6 +196,25 @@ describe('ExploreView', () => {
     wrapper.unmount()
   })
 
+  it('closes the advanced filters with Escape and returns focus to the summary', async () => {
+    const wrapper = mount(ExploreView, {
+      attachTo: document.body,
+      global: { stubs: { RouterLink: routerLinkStub } },
+    })
+    await flushPromises()
+    const panel = wrapper.get('.discover__filter-panel')
+    const details = panel.element as HTMLDetailsElement
+    const summary = panel.get('summary').element as HTMLElement
+    const option = panel.get('button').element as HTMLElement
+    details.open = true
+    option.focus()
+    await panel.trigger('keydown', { key: 'Escape' })
+
+    expect(details.open).toBe(false)
+    expect(document.activeElement).toBe(summary)
+    wrapper.unmount()
+  })
+
   it('sorts the active filter on the server and preserves it for Load more', async () => {
     getRecipesByTagMock
       .mockResolvedValueOnce(firstPage)

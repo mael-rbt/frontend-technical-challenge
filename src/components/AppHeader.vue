@@ -41,6 +41,7 @@ import { RouterLink } from 'vue-router'
   display: inline-flex;
   align-items: center;
   gap: 1rem;
+  min-height: 2.75rem;
   color: var(--color-text);
   text-decoration: none;
   white-space: nowrap;

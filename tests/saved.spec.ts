@@ -9,7 +9,7 @@ import type { Recipe } from '../src/types/recipe'
 vi.mock('../src/services/recipes.api', () => ({ getRecipeById: vi.fn() }))
 
 const detailMock = vi.mocked(getRecipeById)
-const routerLinkStub = { template: '<a><slot /></a>' }
+const routerLinkStub = { template: '<a href="#"><slot /></a>' }
 const pizza: Recipe = {
   id: 1,
   name: 'Classic Margherita Pizza',
@@ -82,12 +82,62 @@ describe('SavedView', () => {
 
   it('removes a card immediately and shows empty when the last is removed', async () => {
     useFavorites().toggleFavorite(1)
-    const wrapper = mountSaved()
+    const wrapper = mount(SavedView, {
+      attachTo: document.body,
+      global: { stubs: { RouterLink: routerLinkStub } },
+    })
     await flushPromises()
-    await wrapper.get('.recipe-card__save').trigger('click')
+    const button = wrapper.get('.recipe-card__save')
+    const buttonElement = button.element as HTMLElement
+    buttonElement.focus()
+    buttonElement.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }))
+    await nextTick()
     expect(wrapper.find('.recipe-card').exists()).toBe(false)
     expect(wrapper.text()).toContain('Nothing saved yet.')
+    expect(document.activeElement).toBe(wrapper.get('#saved-empty').element)
     expect(localStorage.getItem('mise:favorites')).toBe('[]')
+    wrapper.unmount()
+  })
+
+  it('moves keyboard focus to the next saved recipe after removal', async () => {
+    const favorites = useFavorites()
+    favorites.toggleFavorite(1)
+    favorites.toggleFavorite(5)
+    const wrapper = mount(SavedView, {
+      attachTo: document.body,
+      global: { stubs: { RouterLink: routerLinkStub } },
+    })
+    await flushPromises()
+    const button = wrapper.get('.recipe-card__save')
+    const buttonElement = button.element as HTMLElement
+    buttonElement.focus()
+    buttonElement.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }))
+    await nextTick()
+
+    expect(wrapper.findAll('.recipe-card')).toHaveLength(1)
+    expect(document.activeElement).toBe(wrapper.get('.recipe-card__link').element)
+    wrapper.unmount()
+  })
+
+  it('moves focus to retry when the remaining saved recipe could not load', async () => {
+    const favorites = useFavorites()
+    favorites.toggleFavorite(1)
+    favorites.toggleFavorite(5)
+    detailMock.mockImplementation(async (id) => {
+      if (id === 5) throw new Error('Network failure')
+      return pizza
+    })
+    const wrapper = mount(SavedView, {
+      attachTo: document.body,
+      global: { stubs: { RouterLink: routerLinkStub } },
+    })
+    await flushPromises()
+    const button = wrapper.get('.recipe-card__save').element as HTMLElement
+    button.focus()
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }))
+    await nextTick()
+
+    expect(document.activeElement).toBe(wrapper.get('.saved-state button').element)
     wrapper.unmount()
   })
 
