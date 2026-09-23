@@ -1,7 +1,32 @@
 :root {
   color-scheme: light;
-  --color-background: #f8f8f6;
-  --color-text: #202124;
-  --color-focus: #2459b3;
-  --font-body: system-ui, sans-serif;
+  --color-background: #f8f5f1;
+  --color-surface: #fffdfc;
+  --color-text: #1d1d1a;
+  --color-text-muted: #766f68;
+  --color-accent: #ae5130;
+  --color-accent-hover: #974429;
+  --color-accent-soft: #f3e4dc;
+  --color-border: #e1ddd9;
+  --color-border-strong: #d4ccc4;
+  --color-olive: #66733b;
+  --color-gold: #eca83f;
+  --color-focus: #974429;
+
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: Inter, Arial, sans-serif;
+
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-pill: 999px;
+
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 5rem;
+
+  --content-width: 73.75rem;
+  --transition-fast: 180ms ease;
 }
