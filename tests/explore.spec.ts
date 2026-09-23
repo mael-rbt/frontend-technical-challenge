@@ -237,6 +237,36 @@ describe('ExploreView', () => {
       { limit: 12, skip: 1, sortBy: 'rating', order: 'desc' },
       expect.any(AbortSignal),
     )
+    await wrapper.get('#recipe-sort').setValue('name')
+    await flushPromises()
+    expect(getRecipesByTagMock).toHaveBeenLastCalledWith(
+      'Quick',
+      { limit: 12, skip: 0, sortBy: 'name', order: 'asc' },
+      expect.any(AbortSignal),
+    )
+    wrapper.unmount()
+  })
+
+  it('keeps the latest search result when an earlier response arrives late', async () => {
+    let finishOldSearch!: (response: RecipesResponse) => void
+    searchRecipesMock
+      .mockImplementationOnce(
+        () => new Promise<RecipesResponse>((resolve) => (finishOldSearch = resolve)),
+      )
+      .mockResolvedValueOnce({ recipes: [anotherRecipe], total: 1, skip: 0, limit: 12 })
+    const wrapper = await mountedView()
+    vi.useFakeTimers()
+
+    await wrapper.get('#recipe-search').setValue('ra')
+    await vi.advanceTimersByTimeAsync(300)
+    await wrapper.get('#recipe-search').setValue('ramen')
+    await vi.advanceTimersByTimeAsync(300)
+    expect(wrapper.get('.recipe-card h3').text()).toBe(anotherRecipe.name)
+
+    finishOldSearch(firstPage)
+    await flushPromises()
+    expect(wrapper.get('.recipe-card h3').text()).toBe(anotherRecipe.name)
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
     wrapper.unmount()
   })
 
