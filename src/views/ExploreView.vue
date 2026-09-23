@@ -1,58 +1,196 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { CakeSlice, ChevronDown, Leaf, Search, Sun, Utensils, Zap } from 'lucide-vue-next'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import {
+  CakeSlice,
+  ChevronDown,
+  Leaf,
+  Search,
+  SlidersHorizontal,
+  Sun,
+  Utensils,
+  X,
+  Zap,
+} from 'lucide-vue-next'
 import FeaturedRecipe from '../components/FeaturedRecipe.vue'
 import RecipeCard from '../components/RecipeCard.vue'
-import { getRecipes } from '../services/recipes.api'
-import type { Recipe } from '../types/recipe'
+import {
+  getRecipeById,
+  getRecipes,
+  getRecipesByMealType,
+  getRecipesByTag,
+  searchRecipes,
+} from '../services/recipes.api'
+import type { Recipe, RecipeListOptions, RecipesResponse } from '../types/recipe'
 import tomatoCluster from '../assets/decor/tomato-cluster.png'
 import basilCorner from '../assets/decor/basil-corner.png'
 
 const PAGE_SIZE = 12
+const SEARCH_DELAY = 300
+const quickTags = ['Quick', 'Vegetarian', 'Asian', 'Mediterranean', 'Italian', 'Indian']
+const moreTags = ['Japanese', 'Mexican', 'Thai']
+const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Dessert']
+const shortcuts = [
+  { label: 'Breakfast', kind: 'meal', icon: Sun },
+  { label: 'Lunch', kind: 'meal', icon: Leaf },
+  { label: 'Dinner', kind: 'meal', icon: Utensils },
+  { label: 'Dessert', kind: 'meal', icon: CakeSlice },
+  { label: 'Quick', kind: 'tag', icon: Zap },
+] as const
 
+type DiscoveryFilter = { kind: 'tag' | 'meal'; value: string }
+type Sort = 'default' | 'rating' | 'name'
+
+const searchQuery = ref('')
+const selectedFilter = ref<DiscoveryFilter | null>(null)
+const sort = ref<Sort>('default')
 const recipes = ref<Recipe[]>([])
 const total = ref(0)
+const featured = ref<Recipe | null>(null)
+const featuredLoading = ref(true)
 const loading = ref(true)
 const loadingMore = ref(false)
 const error = ref(false)
 const loadMoreError = ref(false)
+const filterPanel = ref<HTMLDetailsElement | null>(null)
 
-const featured = computed(() => recipes.value[0])
 const hasMore = computed(() => recipes.value.length < total.value)
+const hasDiscoverySelection = computed(
+  () => !!searchQuery.value.trim() || !!selectedFilter.value || sort.value !== 'default',
+)
 
-async function loadInitial() {
+let requestId = 0
+let activeController: AbortController | undefined
+let featuredController: AbortController | undefined
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+
+function cancelDiscoveryRequest() {
+  requestId += 1
+  activeController?.abort()
+  clearTimeout(searchTimer)
+}
+
+function listOptions(skip: number): RecipeListOptions {
+  const options: RecipeListOptions = { limit: PAGE_SIZE, skip }
+  if (sort.value === 'rating') return { ...options, sortBy: 'rating', order: 'desc' }
+  if (sort.value === 'name') return { ...options, sortBy: 'name', order: 'asc' }
+  return options
+}
+
+function fetchPage(skip: number, signal: AbortSignal): Promise<RecipesResponse> {
+  const options = listOptions(skip)
+  const query = searchQuery.value.trim()
+  if (query) return searchRecipes(query, options, signal)
+  if (selectedFilter.value?.kind === 'tag') {
+    return getRecipesByTag(selectedFilter.value.value, options, signal)
+  }
+  if (selectedFilter.value?.kind === 'meal') {
+    return getRecipesByMealType(selectedFilter.value.value, options, signal)
+  }
+  return getRecipes(options, signal)
+}
+
+async function loadDiscovery() {
+  cancelDiscoveryRequest()
+  const currentRequest = requestId
+  activeController = new AbortController()
   loading.value = true
+  loadingMore.value = false
   error.value = false
+  loadMoreError.value = false
+  recipes.value = []
+  total.value = 0
 
   try {
-    const result = await getRecipes({ limit: PAGE_SIZE, skip: 0 })
+    const result = await fetchPage(0, activeController.signal)
+    if (currentRequest !== requestId) return
     recipes.value = result.recipes
     total.value = result.total
   } catch {
-    error.value = true
+    if (currentRequest === requestId) error.value = true
   } finally {
-    loading.value = false
+    if (currentRequest === requestId) loading.value = false
   }
 }
 
 async function loadMore() {
-  if (loadingMore.value || !hasMore.value) return
-
+  if (loading.value || loadingMore.value || !hasMore.value) return
+  cancelDiscoveryRequest()
+  const currentRequest = requestId
+  activeController = new AbortController()
   loadingMore.value = true
   loadMoreError.value = false
 
   try {
-    const result = await getRecipes({ limit: PAGE_SIZE, skip: recipes.value.length })
+    const result = await fetchPage(recipes.value.length, activeController.signal)
+    if (currentRequest !== requestId) return
     recipes.value = [...recipes.value, ...result.recipes]
     total.value = result.total
   } catch {
-    loadMoreError.value = true
+    if (currentRequest === requestId) loadMoreError.value = true
   } finally {
-    loadingMore.value = false
+    if (currentRequest === requestId) loadingMore.value = false
   }
 }
 
-onMounted(loadInitial)
+function onSearchInput(event: Event) {
+  searchQuery.value = (event.target as HTMLInputElement).value
+  selectedFilter.value = null
+  cancelDiscoveryRequest()
+  recipes.value = []
+  total.value = 0
+  loading.value = true
+  loadingMore.value = false
+  error.value = false
+  loadMoreError.value = false
+  searchTimer = setTimeout(loadDiscovery, SEARCH_DELAY)
+}
+
+function selectFilter(kind: DiscoveryFilter['kind'], value: string) {
+  const current = selectedFilter.value
+  selectedFilter.value = current?.kind === kind && current.value === value ? null : { kind, value }
+  searchQuery.value = ''
+  if (filterPanel.value) filterPanel.value.open = false
+  void loadDiscovery()
+}
+
+function showAll() {
+  searchQuery.value = ''
+  selectedFilter.value = null
+  void loadDiscovery()
+}
+
+function changeSort(event: Event) {
+  sort.value = (event.target as HTMLSelectElement).value as Sort
+  void loadDiscovery()
+}
+
+function resetDiscovery() {
+  searchQuery.value = ''
+  selectedFilter.value = null
+  sort.value = 'default'
+  if (filterPanel.value) filterPanel.value.open = false
+  void loadDiscovery()
+}
+
+onMounted(() => {
+  featuredController = new AbortController()
+  getRecipeById(1, featuredController.signal)
+    .then((recipe) => {
+      featured.value = recipe
+    })
+    .catch(() => {
+      featured.value = null
+    })
+    .finally(() => {
+      featuredLoading.value = false
+    })
+  void loadDiscovery()
+})
+
+onUnmounted(() => {
+  cancelDiscoveryRequest()
+  featuredController?.abort()
+})
 </script>
 
 <template>
@@ -82,71 +220,174 @@ onMounted(loadInitial)
 
         <div class="hero__search">
           <Search :size="21" :stroke-width="1.7" aria-hidden="true" />
-          <label class="visually-hidden" for="recipe-search">Search recipes (coming soon)</label>
+          <label class="visually-hidden" for="recipe-search">Search recipes by name</label>
           <input
             id="recipe-search"
+            v-model="searchQuery"
             type="search"
-            placeholder="Search recipes, cuisines, ingredients..."
-            disabled
+            placeholder="Search recipes by name..."
+            @input="onSearchInput"
           />
+          <button
+            v-if="searchQuery"
+            type="button"
+            class="hero__clear"
+            aria-label="Clear search"
+            @click="resetDiscovery"
+          >
+            <X :size="18" aria-hidden="true" />
+          </button>
         </div>
-        <p class="hero__hint">Search and meal shortcuts are coming soon.</p>
 
-        <ul class="hero__shortcuts" aria-label="Meal shortcuts coming soon">
-          <li class="chip"><Sun :size="18" aria-hidden="true" />Breakfast</li>
-          <li class="chip"><Leaf :size="18" aria-hidden="true" />Lunch</li>
-          <li class="chip"><Utensils :size="18" aria-hidden="true" />Dinner</li>
-          <li class="chip"><CakeSlice :size="18" aria-hidden="true" />Dessert</li>
-          <li class="chip"><Zap :size="18" aria-hidden="true" />Quick</li>
+        <ul class="hero__shortcuts" aria-label="Meal shortcuts">
+          <li v-for="shortcut in shortcuts" :key="shortcut.label">
+            <button
+              class="chip"
+              :class="{
+                'chip--active':
+                  selectedFilter?.kind === shortcut.kind && selectedFilter.value === shortcut.label,
+              }"
+              type="button"
+              :aria-pressed="
+                selectedFilter?.kind === shortcut.kind && selectedFilter.value === shortcut.label
+              "
+              @click="selectFilter(shortcut.kind, shortcut.label)"
+            >
+              <component :is="shortcut.icon" :size="18" aria-hidden="true" />{{ shortcut.label }}
+            </button>
+          </li>
         </ul>
       </section>
 
-      <template v-if="loading">
-        <p class="visually-hidden" role="status">Loading recipes…</p>
-        <div class="featured-skeleton" aria-hidden="true">
-          <div class="featured-skeleton__image"></div>
-          <div class="featured-skeleton__copy">
-            <span></span><span></span><span></span><span></span>
+      <div v-if="featuredLoading" class="featured-skeleton" aria-hidden="true">
+        <div class="featured-skeleton__image"></div>
+        <div class="featured-skeleton__copy">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+      <FeaturedRecipe v-else-if="featured" :recipe="featured" />
+
+      <section id="discover" class="discover" aria-labelledby="discover-title">
+        <div class="discover__heading">
+          <h2 id="discover-title">Discover</h2>
+          <p v-if="!loading" aria-live="polite">
+            {{ total }} {{ total === 1 ? 'recipe' : 'recipes' }}
+          </p>
+        </div>
+
+        <div class="discover__toolbar">
+          <div class="discover__chips" aria-label="Recipe filters">
+            <button
+              type="button"
+              class="chip"
+              :class="{ 'chip--active': !searchQuery.trim() && !selectedFilter }"
+              :aria-pressed="!searchQuery.trim() && !selectedFilter"
+              @click="showAll"
+            >
+              All
+            </button>
+            <button
+              v-for="tag in quickTags"
+              :key="tag"
+              type="button"
+              class="chip"
+              :class="{
+                'chip--active': selectedFilter?.kind === 'tag' && selectedFilter.value === tag,
+              }"
+              :aria-pressed="selectedFilter?.kind === 'tag' && selectedFilter.value === tag"
+              @click="selectFilter('tag', tag)"
+            >
+              {{ tag }}
+            </button>
+          </div>
+          <div class="discover__actions">
+            <details ref="filterPanel" class="discover__filter-panel">
+              <summary class="chip">
+                <SlidersHorizontal :size="16" aria-hidden="true" />Filters<ChevronDown
+                  :size="15"
+                  aria-hidden="true"
+                />
+              </summary>
+              <div class="discover__filter-options">
+                <p>Meal type</p>
+                <div>
+                  <button
+                    v-for="meal in mealTypes"
+                    :key="meal"
+                    type="button"
+                    class="chip"
+                    :class="{
+                      'chip--active':
+                        selectedFilter?.kind === 'meal' && selectedFilter.value === meal,
+                    }"
+                    :aria-pressed="selectedFilter?.kind === 'meal' && selectedFilter.value === meal"
+                    @click="selectFilter('meal', meal)"
+                  >
+                    {{ meal }}
+                  </button>
+                </div>
+                <p>Cuisine &amp; style</p>
+                <div>
+                  <button
+                    v-for="tag in moreTags"
+                    :key="tag"
+                    type="button"
+                    class="chip"
+                    :class="{
+                      'chip--active':
+                        selectedFilter?.kind === 'tag' && selectedFilter.value === tag,
+                    }"
+                    :aria-pressed="selectedFilter?.kind === 'tag' && selectedFilter.value === tag"
+                    @click="selectFilter('tag', tag)"
+                  >
+                    {{ tag }}
+                  </button>
+                </div>
+              </div>
+            </details>
+            <label class="visually-hidden" for="recipe-sort">Sort recipes</label>
+            <select id="recipe-sort" class="chip discover__sort" :value="sort" @change="changeSort">
+              <option value="default">Sort: Default</option>
+              <option value="rating">Top rated</option>
+              <option value="name">A–Z</option>
+            </select>
           </div>
         </div>
-        <section class="discover" aria-labelledby="discover-title">
-          <h2 id="discover-title">Discover</h2>
+
+        <div v-if="hasDiscoverySelection" class="discover__selection">
+          <span v-if="searchQuery.trim()">Search: “{{ searchQuery.trim() }}”</span>
+          <span v-else-if="selectedFilter">{{ selectedFilter.value }}</span>
+          <span v-if="sort !== 'default'">{{ sort === 'rating' ? 'Top rated' : 'A–Z' }}</span>
+          <button type="button" @click="resetDiscovery">Clear filters</button>
+        </div>
+
+        <template v-if="loading">
+          <p class="visually-hidden" role="status">Loading recipes…</p>
           <div class="recipe-grid" aria-hidden="true">
             <div v-for="index in 6" :key="index" class="recipe-skeleton">
               <div class="recipe-skeleton__image"></div>
               <span></span><span></span>
             </div>
           </div>
-        </section>
-      </template>
-
-      <section v-else-if="error" class="state-panel" role="alert">
-        <h2>We couldn't load the recipes.</h2>
-        <p>Something went wrong while contacting the service. Please try again.</p>
-        <button class="button button--primary" type="button" @click="loadInitial">Try again</button>
-      </section>
-
-      <section v-else-if="recipes.length === 0" class="state-panel">
-        <h2>Nothing on the menu yet.</h2>
-        <p>There are no recipes to explore right now. Please check back soon.</p>
-        <button class="button button--secondary" type="button" @click="loadInitial">
-          Try again
-        </button>
-      </section>
-
-      <template v-else>
-        <FeaturedRecipe v-if="featured" :recipe="featured" />
-
-        <section id="discover" class="discover" aria-labelledby="discover-title">
-          <div class="discover__heading">
-            <h2 id="discover-title">Discover</h2>
-            <p aria-live="polite">Showing {{ recipes.length }} of {{ total }} recipes</p>
-          </div>
-
+        </template>
+        <div v-else-if="error" class="state-panel" role="alert">
+          <h3>We couldn't load the recipes.</h3>
+          <p>Something went wrong while contacting the service. Please try again.</p>
+          <button class="button button--primary" type="button" @click="loadDiscovery">
+            Try again
+          </button>
+        </div>
+        <div v-else-if="recipes.length === 0" class="state-panel">
+          <h3>Nothing on the menu.</h3>
+          <p>Try another search or clear your filters.</p>
+          <button class="button button--secondary" type="button" @click="resetDiscovery">
+            Clear filters
+          </button>
+        </div>
+        <template v-else>
           <div class="recipe-grid">
             <RecipeCard v-for="recipe in recipes" :key="recipe.id" :recipe="recipe" />
           </div>
-
           <div class="discover__footer">
             <p v-if="loadMoreError" class="discover__error" role="alert">
               We couldn't load more recipes. Please try again.
@@ -158,13 +399,13 @@ onMounted(loadInitial)
               :disabled="loadingMore"
               @click="loadMore"
             >
-              {{ loadingMore ? 'Loading…' : 'Load more' }}
-              <ChevronDown v-if="!loadingMore" :size="17" aria-hidden="true" />
+              {{ loadingMore ? 'Loading…' : 'Load more'
+              }}<ChevronDown v-if="!loadingMore" :size="17" aria-hidden="true" />
             </button>
             <p v-else class="discover__end">You've seen every recipe.</p>
           </div>
-        </section>
-      </template>
+        </template>
+      </section>
     </div>
   </main>
 </template>

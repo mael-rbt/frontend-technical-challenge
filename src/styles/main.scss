@@ -3,7 +3,6 @@
 @use 'mixins';
 
 body {
-  min-width: 320px;
   min-height: 100vh;
   background: var(--color-background);
   color: var(--color-text);

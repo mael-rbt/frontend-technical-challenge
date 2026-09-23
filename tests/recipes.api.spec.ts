@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { getRecipeById, getRecipes, searchRecipes } from '../src/services/recipes.api'
+import {
+  getRecipeById,
+  getRecipes,
+  getRecipesByMealType,
+  getRecipesByTag,
+  searchRecipes,
+} from '../src/services/recipes.api'
 import type { Recipe, RecipesResponse } from '../src/types/recipe'
 
 const recipe: Recipe = {
@@ -31,7 +37,7 @@ const recipesResponse: RecipesResponse = {
 function mockFetch(body: unknown, status = 200) {
   const fetchMock = vi
     .fn<typeof fetch>()
-    .mockResolvedValue(new Response(JSON.stringify(body), { status }))
+    .mockImplementation(async () => new Response(JSON.stringify(body), { status }))
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
 }
@@ -96,5 +102,24 @@ describe('recipes API', () => {
     expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
       'https://dummyjson.com/recipes?limit=12&skip=0',
     )
+  })
+
+  it('uses real tag and meal endpoints with sorting and pagination', async () => {
+    const fetchMock = mockFetch(recipesResponse)
+    const options = { limit: 12, skip: 12, sortBy: 'name' as const, order: 'asc' as const }
+
+    await getRecipesByTag('Quick', options)
+    await getRecipesByMealType('Breakfast', options)
+
+    const tagUrl = new URL(String(fetchMock.mock.calls[0]?.[0]))
+    const mealUrl = new URL(String(fetchMock.mock.calls[1]?.[0]))
+    expect(tagUrl.pathname).toBe('/recipes/tag/Quick')
+    expect(mealUrl.pathname).toBe('/recipes/meal-type/Breakfast')
+    for (const url of [tagUrl, mealUrl]) {
+      expect(url.searchParams.get('limit')).toBe('12')
+      expect(url.searchParams.get('skip')).toBe('12')
+      expect(url.searchParams.get('sortBy')).toBe('name')
+      expect(url.searchParams.get('order')).toBe('asc')
+    }
   })
 })

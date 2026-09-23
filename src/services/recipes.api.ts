@@ -1,4 +1,4 @@
-import type { PaginationOptions, Recipe, RecipesResponse } from '../types/recipe'
+import type { Recipe, RecipeListOptions, RecipesResponse } from '../types/recipe'
 
 const BASE_URL = 'https://dummyjson.com'
 
@@ -22,15 +22,17 @@ async function getJson<T>(url: URL, signal?: AbortSignal): Promise<T> {
   return (await response.json()) as T
 }
 
-function listUrl(path: string, { limit = 12, skip = 0 }: PaginationOptions): URL {
+function listUrl(path: string, { limit = 12, skip = 0, sortBy, order }: RecipeListOptions): URL {
   const url = new URL(path, BASE_URL)
   url.searchParams.set('limit', String(limit))
   url.searchParams.set('skip', String(skip))
+  if (sortBy) url.searchParams.set('sortBy', sortBy)
+  if (order) url.searchParams.set('order', order)
   return url
 }
 
 export function getRecipes(
-  options: PaginationOptions = {},
+  options: RecipeListOptions = {},
   signal?: AbortSignal,
 ): Promise<RecipesResponse> {
   return getJson<RecipesResponse>(listUrl('/recipes', options), signal)
@@ -42,7 +44,7 @@ export function getRecipeById(id: number, signal?: AbortSignal): Promise<Recipe>
 
 export function searchRecipes(
   query: string,
-  options: PaginationOptions = {},
+  options: RecipeListOptions = {},
   signal?: AbortSignal,
 ): Promise<RecipesResponse> {
   const trimmedQuery = query.trim()
@@ -54,4 +56,26 @@ export function searchRecipes(
   const url = listUrl('/recipes/search', options)
   url.searchParams.set('q', trimmedQuery)
   return getJson<RecipesResponse>(url, signal)
+}
+
+export function getRecipesByTag(
+  tag: string,
+  options: RecipeListOptions = {},
+  signal?: AbortSignal,
+): Promise<RecipesResponse> {
+  return getJson<RecipesResponse>(
+    listUrl(`/recipes/tag/${encodeURIComponent(tag)}`, options),
+    signal,
+  )
+}
+
+export function getRecipesByMealType(
+  mealType: string,
+  options: RecipeListOptions = {},
+  signal?: AbortSignal,
+): Promise<RecipesResponse> {
+  return getJson<RecipesResponse>(
+    listUrl(`/recipes/meal-type/${encodeURIComponent(mealType)}`, options),
+    signal,
+  )
 }

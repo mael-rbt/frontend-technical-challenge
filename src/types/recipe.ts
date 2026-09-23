@@ -24,7 +24,9 @@ export interface RecipesResponse {
   limit: number
 }
 
-export interface PaginationOptions {
+export interface RecipeListOptions {
   limit?: number
   skip?: number
+  sortBy?: 'name' | 'rating'
+  order?: 'asc' | 'desc'
 }

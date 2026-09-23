@@ -38,7 +38,7 @@
 
 .hero h1,
 .discover h2,
-.state-panel h2 {
+.state-panel h3 {
   font-family: var(--font-display);
   font-weight: 400;
 }
@@ -70,6 +70,11 @@
   color: var(--color-text-muted);
 }
 
+.hero__search:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
 .hero__search input {
   width: 100%;
   min-width: 0;
@@ -80,7 +85,6 @@
   font: inherit;
   font-size: 0.92rem;
   opacity: 1;
-  cursor: not-allowed;
 
   &::placeholder {
     color: var(--color-text-muted);
@@ -88,10 +92,22 @@
   }
 }
 
-.hero__hint {
-  margin: 0.4rem 0 0;
+.hero__clear {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: -0.6rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
   color: var(--color-text-muted);
-  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-accent);
+  }
 }
 
 .hero__shortcuts {
@@ -103,11 +119,23 @@
   list-style: none;
 }
 
+.hero__shortcuts,
+.discover__chips {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .hero__shortcuts .chip {
+  display: inline-flex;
+  align-items: center;
   gap: 0.55rem;
-  min-height: 2.4rem;
+  min-height: 2.75rem;
   padding-inline: 0.85rem;
   box-shadow: 0 4px 15px rgb(50 35 20 / 4%);
+  cursor: pointer;
 }
 
 .hero__shortcuts li:nth-child(1) svg,
@@ -124,6 +152,10 @@
   color: var(--color-accent);
 }
 
+.hero__shortcuts li .chip--active svg {
+  color: white;
+}
+
 .discover {
   margin-top: 2.2rem;
 }
@@ -136,7 +168,8 @@
   margin-bottom: 1rem;
 }
 
-.discover h2 {
+.discover h2,
+.state-panel h3 {
   margin: 0;
   font-size: clamp(2rem, 3vw, 2.5rem);
   line-height: 1.1;
@@ -146,6 +179,117 @@
   margin: 0;
   color: var(--color-text-muted);
   font-size: 0.82rem;
+}
+
+.discover__toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
+}
+
+.discover__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.discover__toolbar button {
+  cursor: pointer;
+}
+
+.discover__toolbar .chip {
+  min-height: 2.75rem;
+  white-space: nowrap;
+}
+
+.discover__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.discover__filter-panel {
+  position: relative;
+}
+
+.discover__filter-panel summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.discover__filter-panel[open] summary {
+  border-color: var(--color-accent);
+}
+
+.discover__filter-options {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: min(21rem, calc(100vw - 2.5rem));
+  padding: 1rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: 0 8px 30px rgb(50 35 20 / 8%);
+}
+
+.discover__filter-options p {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.discover__filter-options p:not(:first-child) {
+  margin-top: 1rem;
+}
+
+.discover__filter-options > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.discover__sort {
+  max-width: 9.5rem;
+  cursor: pointer;
+}
+
+.discover__selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin: -0.2rem 0 0.9rem;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.discover__selection span {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.discover__selection button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
 }
 
 .recipe-grid {
@@ -192,12 +336,6 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-}
-
-.state-panel h2 {
-  margin: 0;
-  font-size: clamp(2rem, 3vw, 2.5rem);
-  line-height: 1.1;
 }
 
 .state-panel p {
@@ -299,11 +437,35 @@
   }
 
   .hero__shortcuts {
+    flex-wrap: nowrap;
     gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
   }
 
   .hero__shortcuts .chip {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .discover__toolbar {
+    flex-direction: column;
+  }
+
+  .discover__chips {
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .discover__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .discover__filter-options {
+    right: auto;
+    left: 0;
   }
 
   .recipe-grid {
