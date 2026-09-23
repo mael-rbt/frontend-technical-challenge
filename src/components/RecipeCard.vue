@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Clock3, Star } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
 import type { Recipe } from '../types/recipe'
 
 defineProps<{ recipe: Recipe }>()
@@ -7,29 +8,31 @@ defineProps<{ recipe: Recipe }>()
 
 <template>
   <article class="recipe-card">
-    <div class="recipe-card__image-wrap">
-      <img
-        :src="recipe.image"
-        :alt="`${recipe.name} prepared dish`"
-        width="400"
-        height="300"
-        loading="lazy"
-      />
-    </div>
-    <div class="recipe-card__content">
-      <p class="recipe-card__cuisine">{{ recipe.cuisine }}</p>
-      <h3>{{ recipe.name }}</h3>
-      <div class="recipe-card__meta">
-        <span>
-          <Clock3 :size="15" :stroke-width="1.7" aria-hidden="true" />
-          {{ recipe.prepTimeMinutes + recipe.cookTimeMinutes }} min
-        </span>
-        <span>
-          <Star :size="15" :stroke-width="1.7" aria-hidden="true" />
-          {{ recipe.rating.toFixed(1) }} ({{ recipe.reviewCount }})
-        </span>
+    <RouterLink class="recipe-card__link" :to="`/recipes/${recipe.id}`">
+      <div class="recipe-card__image-wrap">
+        <img
+          :src="recipe.image"
+          :alt="`${recipe.name} prepared dish`"
+          width="400"
+          height="300"
+          loading="lazy"
+        />
       </div>
-    </div>
+      <div class="recipe-card__content">
+        <p class="recipe-card__cuisine">{{ recipe.cuisine }}</p>
+        <h3>{{ recipe.name }}</h3>
+        <div class="recipe-card__meta">
+          <span>
+            <Clock3 :size="15" :stroke-width="1.7" aria-hidden="true" />
+            {{ recipe.prepTimeMinutes + recipe.cookTimeMinutes }} min
+          </span>
+          <span>
+            <Star :size="15" :stroke-width="1.7" aria-hidden="true" />
+            {{ recipe.rating.toFixed(1) }} ({{ recipe.reviewCount }})
+          </span>
+        </div>
+      </div>
+    </RouterLink>
   </article>
 </template>
 
@@ -39,6 +42,17 @@ defineProps<{ recipe: Recipe }>()
   overflow: hidden;
   border-radius: var(--radius-sm);
   background: var(--color-surface);
+}
+
+.recipe-card__link {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.recipe-card__link:hover h3 {
+  color: var(--color-accent);
 }
 
 .recipe-card__image-wrap {

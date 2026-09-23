@@ -24,6 +24,7 @@ const getRecipesMock = vi.mocked(getRecipes)
 const getRecipesByMealTypeMock = vi.mocked(getRecipesByMealType)
 const getRecipesByTagMock = vi.mocked(getRecipesByTag)
 const searchRecipesMock = vi.mocked(searchRecipes)
+const routerLinkStub = { template: '<a><slot /></a>' }
 
 const recipe: Recipe = {
   id: 1,
@@ -60,14 +61,17 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers())
 
 async function mountedView() {
-  const wrapper = mount(ExploreView)
+  const wrapper = mount(ExploreView, { global: { stubs: { RouterLink: routerLinkStub } } })
   await flushPromises()
   return wrapper
 }
 
 describe('RecipeCard', () => {
   it('shows the recipe name, total time, and rating', () => {
-    const wrapper = mount(RecipeCard, { props: { recipe } })
+    const wrapper = mount(RecipeCard, {
+      props: { recipe },
+      global: { stubs: { RouterLink: routerLinkStub } },
+    })
     expect(wrapper.text()).toContain('Classic Margherita Pizza')
     expect(wrapper.text()).toContain('35 min')
     expect(wrapper.text()).toContain('4.6 (98)')
@@ -81,7 +85,7 @@ describe('ExploreView', () => {
     getRecipesMock.mockImplementation(
       () => new Promise<RecipesResponse>((resolve) => (finishRequest = resolve)),
     )
-    const wrapper = mount(ExploreView)
+    const wrapper = mount(ExploreView, { global: { stubs: { RouterLink: routerLinkStub } } })
     expect(wrapper.text()).toContain('Loading recipes')
 
     finishRequest(firstPage)

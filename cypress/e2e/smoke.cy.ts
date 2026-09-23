@@ -84,4 +84,35 @@ describe('Explore page', () => {
     cy.contains('1 recipe').should('be.visible')
     cy.contains('.recipe-card', 'Japanese Ramen Soup').should('be.visible')
   })
+
+  it('opens a recipe from Explore and navigates to a related recipe', () => {
+    cy.visit('/')
+    cy.contains('.recipe-card', 'Classic Margherita Pizza').find('a').click()
+    cy.url().should('include', '/recipes/1')
+    cy.get('h1').should('contain.text', 'Classic Margherita Pizza')
+    cy.get('.detail-ingredients input').first().check().should('be.checked')
+    cy.get('.detail-related .recipe-card').first().find('a').click()
+    cy.url().should('match', /\/recipes\/\d+$/)
+    cy.get('h1').should('not.contain.text', 'Classic Margherita Pizza')
+    cy.get('.detail-page__back').click()
+    cy.get('h1').should('contain.text', 'What are you')
+    cy.get('.featured__action').click()
+    cy.url().should('include', '/recipes/1')
+  })
+
+  it('offers retry when a detail request fails', () => {
+    let attempts = 0
+    cy.intercept('GET', 'https://dummyjson.com/recipes/1', (request) => {
+      attempts += 1
+      if (attempts === 1) request.reply({ statusCode: 503, body: { message: 'Unavailable' } })
+      else request.continue()
+    }).as('detail')
+    cy.visit('/recipes/1')
+    cy.wait('@detail')
+    cy.contains("We couldn't load this recipe.").should('be.visible')
+    cy.contains('button', 'Try again').click()
+    cy.wait('@detail')
+    cy.get('h1').should('contain.text', 'Classic Margherita Pizza')
+    cy.then(() => expect(attempts).to.eq(2))
+  })
 })

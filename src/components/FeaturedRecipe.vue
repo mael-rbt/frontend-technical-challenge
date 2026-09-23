@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowDown, Clock3, Star, UsersRound } from 'lucide-vue-next'
+import { ArrowRight, Clock3, Star, UsersRound } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
 import type { Recipe } from '../types/recipe'
 
 defineProps<{ recipe: Recipe }>()
@@ -28,9 +29,9 @@ defineProps<{ recipe: Recipe }>()
           {{ recipe.rating.toFixed(1) }} ({{ recipe.reviewCount }})
         </span>
       </div>
-      <a class="button button--primary featured__action" href="#discover">
-        Browse recipes <ArrowDown :size="17" :stroke-width="1.7" aria-hidden="true" />
-      </a>
+      <RouterLink class="button button--primary featured__action" :to="`/recipes/${recipe.id}`">
+        View recipe <ArrowRight :size="17" :stroke-width="1.7" aria-hidden="true" />
+      </RouterLink>
     </div>
 
     <div class="featured__aside">
