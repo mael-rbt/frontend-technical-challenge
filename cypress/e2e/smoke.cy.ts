@@ -66,6 +66,8 @@ describe('Core recipe journeys', () => {
     cy.wait(['@recipes', '@pizza'])
 
     cy.get('h1').should('contain.text', 'What are you')
+    cy.title().should('eq', 'Explore | Mise')
+    cy.get('head link[rel="icon"]').should('have.attr', 'href', '/favicon.svg')
     cy.contains('.recipe-card', pizza.name).should('be.visible')
     cy.get('.recipe-card').should('have.length', 2)
     cy.get('#featured-title').should('contain.text', pizza.name)
@@ -74,6 +76,61 @@ describe('Core recipe journeys', () => {
         document.documentElement.clientWidth,
       )
     })
+  })
+
+  it('shows the initial skeleton and keeps search below the sticky header', () => {
+    cy.viewport(1280, 550)
+    cy.intercept('GET', 'https://dummyjson.com/recipes?*', {
+      delay: 800,
+      body: explorePage,
+    }).as('delayedRecipes')
+    cy.intercept('GET', 'https://dummyjson.com/recipes/1', pizza).as('pizza')
+    visitInEnglish()
+    cy.get('.recipe-skeleton').should('have.length', 6)
+    cy.wait(['@delayedRecipes', '@pizza'])
+    cy.get('.recipe-skeleton').should('not.exist')
+    cy.contains('.recipe-card', pizza.name).should('be.visible')
+
+    cy.scrollTo(0, 450)
+    cy.get('.site-header').then(($header) => {
+      const headerBottom = $header[0]!.getBoundingClientRect().bottom
+      cy.get('.discovery-sticky').then(($search) => {
+        expect($search[0]!.getBoundingClientRect().top).to.be.closeTo(headerBottom, 3)
+      })
+    })
+  })
+
+  it('removes entrance and skeleton motion when reduced motion is requested', () => {
+    cy.then(() =>
+      Cypress.automation('remote:debugger:protocol', {
+        command: 'Emulation.setEmulatedMedia',
+        params: { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] },
+      }),
+    )
+    cy.intercept('GET', 'https://dummyjson.com/recipes?*', {
+      delay: 600,
+      body: explorePage,
+    }).as('recipes')
+    cy.intercept('GET', 'https://dummyjson.com/recipes/1', pizza).as('pizza')
+    visitInEnglish()
+    cy.window().should((window) => {
+      expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches).to.eq(true)
+    })
+    cy.get('.recipe-skeleton__image').should(($image) => {
+      const image = $image[0]!
+      expect(image.ownerDocument.defaultView!.getComputedStyle(image).animationName).to.eq('none')
+    })
+    cy.wait(['@recipes', '@pizza'])
+    cy.get('.recipe-grid').should(($grid) => {
+      const grid = $grid[0]!
+      expect(grid.ownerDocument.defaultView!.getComputedStyle(grid).animationName).to.eq('none')
+    })
+    cy.then(() =>
+      Cypress.automation('remote:debugger:protocol', {
+        command: 'Emulation.setEmulatedMedia',
+        params: { features: [{ name: 'prefers-reduced-motion', value: '' }] },
+      }),
+    )
   })
 
   it('searches, clears the search, and filters by meal type', () => {
@@ -126,6 +183,8 @@ describe('Core recipe journeys', () => {
     cy.wait('@related')
     cy.url().should('include', '/recipes/1')
     cy.get('h1').should('contain.text', pizza.name)
+    cy.title().should('eq', `${pizza.name} | Mise`)
+    cy.get('head script#recipe-structured-data').should('have.length', 1)
     cy.contains('.detail-ingredients', 'Fresh mozzarella').should('be.visible')
     cy.contains('.detail-instructions', 'Bake the pizza.').should('be.visible')
     cy.get('.detail-ingredients input').first().check().should('be.checked')
@@ -133,6 +192,8 @@ describe('Core recipe journeys', () => {
     cy.contains('.detail-related .recipe-card', pasta.name).find('a').click()
     cy.wait('@pasta')
     cy.get('h1').should('contain.text', pasta.name)
+    cy.title().should('eq', `${pasta.name} | Mise`)
+    cy.get('head script#recipe-structured-data').should('have.length', 1)
   })
 
   it('keeps a favorite after reload and removes it from Saved', () => {
@@ -150,6 +211,8 @@ describe('Core recipe journeys', () => {
       .should('have.attr', 'aria-pressed', 'true')
 
     cy.contains('.site-nav a', 'Saved').click()
+    cy.title().should('eq', 'Saved recipes | Mise')
+    cy.get('head script#recipe-structured-data').should('not.exist')
     cy.wait('@pizza')
     cy.contains('.recipe-card', pizza.name).should('be.visible')
     cy.reload()
@@ -206,6 +269,7 @@ describe('Core recipe journeys', () => {
     cy.get('#language-select').select('de')
     cy.wait(['@recipes', '@pizza'])
     cy.get('html').should('have.attr', 'lang', 'de')
+    cy.title().should('eq', 'Entdecken | Mise')
     cy.get('h1').should('contain.text', 'Worauf hast du')
     cy.get('.hero__shortcuts').contains('Frühstück').should('be.visible')
     cy.get('.hero__shortcuts').contains('button', 'Frühstück').click()
@@ -216,11 +280,13 @@ describe('Core recipe journeys', () => {
     cy.contains('.recipe-card', pizza.name).find('a').click()
     cy.wait('@pizza')
     cy.get('h1').should('contain.text', pizza.name)
+    cy.title().should('eq', `${pizza.name} | Mise`)
     cy.contains('.detail-ingredients h2', 'Zutaten').should('be.visible')
     cy.contains('.detail-ingredients', 'Pizza dough').should('be.visible')
     cy.contains('.detail-instructions', 'Bake the pizza.').should('be.visible')
     cy.contains('.site-nav a', 'Merkliste').click()
     cy.contains('Noch nichts gemerkt.').should('be.visible')
+    cy.title().should('eq', 'Gemerkte Rezepte | Mise')
     cy.reload()
     cy.get('html').should('have.attr', 'lang', 'de')
     cy.contains('Noch nichts gemerkt.').should('be.visible')
@@ -232,6 +298,7 @@ describe('Core recipe journeys', () => {
     cy.contains('.site-nav a', 'Explorer').click()
     cy.wait(['@recipes', '@pizza'])
     cy.get('h1').should('contain.text', 'Qu’est-ce qui vous')
+    cy.title().should('eq', 'Explorer | Mise')
 
     cy.intercept(
       { method: 'GET', url: 'https://dummyjson.com/recipes?*', times: 1 },

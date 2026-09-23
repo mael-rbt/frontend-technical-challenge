@@ -1,5 +1,8 @@
 {
-  "document_title": "Mise — Découvrir des recettes",
+  "document_title": "Mise | Découvrir des recettes",
+  "meta_description": "Découvrez des recettes à cuisiner et gardez vos préférées à portée de main.",
+  "meta_recipe_page_title": "Recette",
+  "meta_recipe_description": "Ingrédients et préparation de {name}.",
   "brand_tagline_top": "Bien manger",
   "brand_tagline_bottom": "de plus beaux jours",
   "nav_main_label": "Navigation principale",

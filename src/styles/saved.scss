@@ -106,6 +106,10 @@
   width: 45%;
 }
 
+.saved-skeleton span:nth-last-child(2) {
+  height: 1.4rem;
+}
+
 @media (max-width: 1023px) {
   .saved-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

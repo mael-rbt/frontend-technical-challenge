@@ -158,6 +158,14 @@
   color: var(--color-accent);
 }
 
+.detail-hero__save svg {
+  transition: transform var(--transition-fast);
+}
+
+.detail-hero__save:active svg {
+  transform: scale(0.9);
+}
+
 .detail-body {
   display: grid;
   grid-template-columns: minmax(0, 0.38fr) minmax(0, 0.62fr);
@@ -250,6 +258,22 @@
 .detail-ingredients__checked span {
   color: var(--color-text-muted);
   text-decoration: line-through;
+}
+
+.detail-ingredients label span {
+  transition: color var(--transition-fast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-hero__save svg,
+  .detail-ingredients input::before,
+  .detail-ingredients label span {
+    transition: none;
+  }
+
+  .detail-hero__save:active svg {
+    transform: none;
+  }
 }
 
 .detail-ingredients__all {

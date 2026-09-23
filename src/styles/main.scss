@@ -112,6 +112,7 @@ body {
   :is(
     .featured-skeleton__image,
     .featured-skeleton__copy span,
+    .featured-skeleton__aside span,
     .recipe-skeleton__image,
     .recipe-skeleton span,
     .detail-skeleton__image,
@@ -122,11 +123,22 @@ body {
   ) {
     animation: skeleton-breathe 2s ease-in-out infinite alternate;
   }
+
+  :is(.featured, .detail-hero, .recipe-grid, .saved-grid) {
+    animation: content-enter 240ms ease-out both;
+  }
 }
 
 @keyframes skeleton-breathe {
   to {
     background-color: #f5f0eb;
+  }
+}
+
+@keyframes content-enter {
+  from {
+    opacity: 0.88;
+    transform: translateY(6px);
   }
 }
 

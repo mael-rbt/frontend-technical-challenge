@@ -1,5 +1,8 @@
 {
-  "document_title": "Mise — Recipe discovery",
+  "document_title": "Mise | Recipe discovery",
+  "meta_description": "Discover recipes worth cooking and keep your favorites close.",
+  "meta_recipe_page_title": "Recipe",
+  "meta_recipe_description": "Ingredients and instructions for {name}.",
   "brand_tagline_top": "Good food",
   "brand_tagline_bottom": "brighter days",
   "nav_main_label": "Main navigation",

@@ -1,5 +1,8 @@
 {
-  "document_title": "Mise — Rezepte entdecken",
+  "document_title": "Mise | Rezepte entdecken",
+  "meta_description": "Entdecke Rezepte zum Nachkochen und merke dir deine Favoriten.",
+  "meta_recipe_page_title": "Rezept",
+  "meta_recipe_description": "Zutaten und Zubereitung für {name}.",
   "brand_tagline_top": "Gutes Essen",
   "brand_tagline_bottom": "schönere Tage",
   "nav_main_label": "Hauptnavigation",

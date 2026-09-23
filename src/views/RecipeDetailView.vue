@@ -14,6 +14,7 @@ import type { Recipe } from '../types/recipe'
 import tomatoCluster from '../assets/decor/tomato-cluster.webp'
 import basilCorner from '../assets/decor/basil-corner.webp'
 import * as m from '../paraglide/messages.js'
+import { setPageMetadata, setRecipeStructuredData } from '../metadata'
 
 const route = useRoute()
 const { isFavorite, toggleFavorite } = useFavorites()
@@ -52,6 +53,7 @@ async function loadRecipe(rawId: unknown) {
   relatedRecipes.value = []
   checkedIngredients.value = []
   error.value = null
+  setRecipeStructuredData(null)
 
   const id = typeof rawId === 'string' && /^[1-9]\d*$/.test(rawId) ? Number(rawId) : NaN
   if (!Number.isSafeInteger(id)) {
@@ -66,6 +68,12 @@ async function loadRecipe(rawId: unknown) {
     if (signal.aborted) return
     recipe.value = result
     loading.value = false
+    setPageMetadata(
+      `${result.name} | Mise`,
+      m.meta_recipe_description({ name: result.name }),
+      result.image,
+    )
+    setRecipeStructuredData(result)
 
     try {
       const matches = await loadRelated(result, signal)
@@ -88,7 +96,10 @@ function toggleAllIngredients() {
 }
 
 watch(() => route.params.id, loadRecipe, { immediate: true })
-onUnmounted(() => controller?.abort())
+onUnmounted(() => {
+  controller?.abort()
+  setRecipeStructuredData(null)
+})
 </script>
 
 <template>

@@ -82,7 +82,7 @@ onUnmounted(() => controller?.abort())
         <div class="saved-grid" aria-hidden="true">
           <div v-for="index in Math.min(favoriteIds.length, 3)" :key="index" class="saved-skeleton">
             <div class="saved-skeleton__image"></div>
-            <span></span><span></span>
+            <span></span><span></span><span></span>
           </div>
         </div>
       </template>

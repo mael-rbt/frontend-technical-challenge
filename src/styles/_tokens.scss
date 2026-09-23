@@ -29,4 +29,17 @@
 
   --content-width: 73.75rem;
   --transition-fast: 180ms ease;
+  --site-header-height: 4.5rem;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --site-header-height: 4rem;
+  }
+}
+
+@media (max-width: 359px) {
+  :root {
+    --site-header-height: 6.25rem;
+  }
 }

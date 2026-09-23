@@ -245,7 +245,9 @@ onUnmounted(() => {
       <section class="hero" aria-labelledby="hero-title">
         <h1 id="hero-title">{{ m.hero_title_first() }}<br />{{ m.hero_title_second() }}</h1>
         <p>{{ m.hero_subtitle() }}</p>
+      </section>
 
+      <div class="discovery-sticky">
         <div class="hero__search">
           <Search :size="21" :stroke-width="1.7" aria-hidden="true" />
           <label class="visually-hidden" for="recipe-search">{{ m.search_label() }}</label>
@@ -287,12 +289,15 @@ onUnmounted(() => {
             </button>
           </li>
         </ul>
-      </section>
+      </div>
 
       <div v-if="featuredLoading" class="featured-skeleton" aria-hidden="true">
         <div class="featured-skeleton__image"></div>
         <div class="featured-skeleton__copy">
           <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="featured-skeleton__aside">
+          <span></span><span></span><span></span>
         </div>
       </div>
       <FeaturedRecipe v-else-if="featured" :recipe="featured" />
@@ -401,7 +406,7 @@ onUnmounted(() => {
           <div class="recipe-grid" aria-hidden="true">
             <div v-for="index in 6" :key="index" class="recipe-skeleton">
               <div class="recipe-skeleton__image"></div>
-              <span></span><span></span>
+              <span></span><span></span><span></span>
             </div>
           </div>
         </template>

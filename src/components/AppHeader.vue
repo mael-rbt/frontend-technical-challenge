@@ -48,9 +48,11 @@ function changeLocale(event: Event) {
 
 <style scoped lang="scss">
 .site-header {
-  position: relative;
-  z-index: 2;
+  position: sticky;
+  top: 0;
+  z-index: 20;
   background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .site-header__inner {
@@ -160,7 +162,8 @@ function changeLocale(event: Event) {
   .site-header__inner {
     flex-direction: column;
     align-items: stretch;
-    padding-block: 0.35rem;
+    gap: 0.25rem;
+    padding-block: 0.25rem;
   }
 
   .site-header__actions {
