@@ -4,7 +4,7 @@ import pluginVue from 'eslint-plugin-vue'
 import skipFormatting from 'eslint-config-prettier/flat'
 
 export default defineConfigWithVueTs(
-  globalIgnores(['dist/**', 'coverage/**']),
+  globalIgnores(['dist/**', 'coverage/**', 'src/paraglide/**']),
   ...pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
   skipFormatting,

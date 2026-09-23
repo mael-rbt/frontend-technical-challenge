@@ -50,11 +50,19 @@ function interceptExplore() {
   cy.intercept('GET', 'https://dummyjson.com/recipes/1', pizza).as('pizza')
 }
 
+function visitInEnglish() {
+  cy.visit('/', {
+    onBeforeLoad(window) {
+      window.localStorage.setItem('PARAGLIDE_LOCALE', 'en')
+    },
+  })
+}
+
 describe('Core recipe journeys', () => {
   it('loads Explore and its featured recipe on mobile', () => {
     cy.viewport(375, 667)
     interceptExplore()
-    cy.visit('/')
+    visitInEnglish()
     cy.wait(['@recipes', '@pizza'])
 
     cy.get('h1').should('contain.text', 'What are you')
@@ -80,7 +88,7 @@ describe('Core recipe journeys', () => {
       skip: 0,
       limit: 12,
     } satisfies RecipesResponse).as('breakfast')
-    cy.visit('/')
+    visitInEnglish()
     cy.wait(['@recipes', '@pizza'])
 
     cy.get('#recipe-search').type('  ramen  ')
@@ -110,7 +118,7 @@ describe('Core recipe journeys', () => {
       skip: 0,
       limit: 4,
     } satisfies RecipesResponse).as('related')
-    cy.visit('/')
+    visitInEnglish()
     cy.wait(['@recipes', '@pizza'])
 
     cy.contains('.recipe-card', pizza.name).find('a').click()
@@ -131,6 +139,7 @@ describe('Core recipe journeys', () => {
     interceptExplore()
     cy.visit('/', {
       onBeforeLoad(window) {
+        window.localStorage.setItem('PARAGLIDE_LOCALE', 'en')
         window.localStorage.removeItem('mise:favorites')
       },
     })
@@ -161,12 +170,81 @@ describe('Core recipe journeys', () => {
         attempts === 1 ? { statusCode: 503, body: {} } : { statusCode: 200, body: explorePage },
       )
     }).as('recipes')
-    cy.visit('/')
+    visitInEnglish()
     cy.wait('@recipes')
     cy.contains("We couldn't load the recipes.").should('be.visible')
     cy.contains('button', 'Try again').click()
     cy.wait('@recipes')
     cy.contains('.recipe-card', pizza.name).should('be.visible')
     cy.then(() => expect(attempts).to.eq(2))
+  })
+
+  it('keeps German across routes and reload, then switches to French', () => {
+    interceptExplore()
+    cy.intercept('GET', 'https://dummyjson.com/recipes/meal-type/Breakfast?*', {
+      recipes: [],
+      total: 0,
+      skip: 0,
+      limit: 12,
+    } satisfies RecipesResponse).as('emptyBreakfast')
+    cy.intercept('GET', 'https://dummyjson.com/recipes/tag/Italian?*', {
+      recipes: [pizza],
+      total: 1,
+      skip: 0,
+      limit: 4,
+    } satisfies RecipesResponse)
+    cy.visit('/', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem('PARAGLIDE_LOCALE', 'en')
+        window.localStorage.removeItem('mise:favorites')
+      },
+    })
+    cy.wait(['@recipes', '@pizza'])
+    cy.get('html').should('have.attr', 'lang', 'en')
+    cy.get('h1').should('contain.text', 'What are you')
+
+    cy.get('#language-select').select('de')
+    cy.wait(['@recipes', '@pizza'])
+    cy.get('html').should('have.attr', 'lang', 'de')
+    cy.get('h1').should('contain.text', 'Worauf hast du')
+    cy.get('.hero__shortcuts').contains('Frühstück').should('be.visible')
+    cy.get('.hero__shortcuts').contains('button', 'Frühstück').click()
+    cy.wait('@emptyBreakfast')
+    cy.contains('Heute steht nichts auf der Karte.').should('be.visible')
+    cy.contains('button', 'Filter zurücksetzen').click()
+    cy.wait('@recipes')
+    cy.contains('.recipe-card', pizza.name).find('a').click()
+    cy.wait('@pizza')
+    cy.get('h1').should('contain.text', pizza.name)
+    cy.contains('.detail-ingredients h2', 'Zutaten').should('be.visible')
+    cy.contains('.detail-ingredients', 'Pizza dough').should('be.visible')
+    cy.contains('.detail-instructions', 'Bake the pizza.').should('be.visible')
+    cy.contains('.site-nav a', 'Merkliste').click()
+    cy.contains('Noch nichts gemerkt.').should('be.visible')
+    cy.reload()
+    cy.get('html').should('have.attr', 'lang', 'de')
+    cy.contains('Noch nichts gemerkt.').should('be.visible')
+    cy.window().its('localStorage').invoke('getItem', 'PARAGLIDE_LOCALE').should('eq', 'de')
+
+    cy.get('#language-select').select('fr')
+    cy.get('html').should('have.attr', 'lang', 'fr')
+    cy.contains('Aucune recette enregistrée.').should('be.visible')
+    cy.contains('.site-nav a', 'Explorer').click()
+    cy.wait(['@recipes', '@pizza'])
+    cy.get('h1').should('contain.text', 'Qu’est-ce qui vous')
+
+    cy.intercept(
+      { method: 'GET', url: 'https://dummyjson.com/recipes?*', times: 1 },
+      {
+        statusCode: 503,
+        body: {},
+      },
+    ).as('errorFr')
+    cy.reload()
+    cy.wait('@errorFr')
+    cy.contains('Impossible de charger les recettes.').should('be.visible')
+    cy.contains('button', 'Réessayer').click()
+    cy.wait('@recipes')
+    cy.contains('.recipe-card', pizza.name).should('be.visible')
   })
 })

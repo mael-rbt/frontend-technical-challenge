@@ -23,21 +23,37 @@ import {
 import type { Recipe, RecipeListOptions, RecipesResponse } from '../types/recipe'
 import tomatoCluster from '../assets/decor/tomato-cluster.webp'
 import basilCorner from '../assets/decor/basil-corner.webp'
+import * as m from '../paraglide/messages.js'
 
 const PAGE_SIZE = 12
 const SEARCH_DELAY = 300
-const quickTags = ['Quick', 'Vegetarian', 'Asian', 'Mediterranean', 'Italian', 'Indian']
-const moreTags = ['Japanese', 'Mexican', 'Thai']
-const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Dessert']
+const quickTags = ['Quick', 'Vegetarian', 'Asian', 'Mediterranean', 'Italian', 'Indian'] as const
+const moreTags = ['Japanese', 'Mexican', 'Thai'] as const
+const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Dessert'] as const
+const filterLabels = {
+  Breakfast: m.meal_breakfast,
+  Lunch: m.meal_lunch,
+  Dinner: m.meal_dinner,
+  Dessert: m.meal_dessert,
+  Quick: m.tag_quick,
+  Vegetarian: m.tag_vegetarian,
+  Asian: m.tag_asian,
+  Mediterranean: m.tag_mediterranean,
+  Italian: m.tag_italian,
+  Indian: m.tag_indian,
+  Japanese: m.tag_japanese,
+  Mexican: m.tag_mexican,
+  Thai: m.tag_thai,
+}
 const shortcuts = [
-  { label: 'Breakfast', kind: 'meal', icon: Sun },
-  { label: 'Lunch', kind: 'meal', icon: Leaf },
-  { label: 'Dinner', kind: 'meal', icon: Utensils },
-  { label: 'Dessert', kind: 'meal', icon: CakeSlice },
-  { label: 'Quick', kind: 'tag', icon: Zap },
+  { value: 'Breakfast', kind: 'meal', icon: Sun },
+  { value: 'Lunch', kind: 'meal', icon: Leaf },
+  { value: 'Dinner', kind: 'meal', icon: Utensils },
+  { value: 'Dessert', kind: 'meal', icon: CakeSlice },
+  { value: 'Quick', kind: 'tag', icon: Zap },
 ] as const
 
-type DiscoveryFilter = { kind: 'tag' | 'meal'; value: string }
+type DiscoveryFilter = { kind: 'tag' | 'meal'; value: keyof typeof filterLabels }
 type Sort = 'default' | 'rating' | 'name'
 
 const searchQuery = ref('')
@@ -145,7 +161,7 @@ function onSearchInput(event: Event) {
   searchTimer = setTimeout(loadDiscovery, SEARCH_DELAY)
 }
 
-function selectFilter(kind: DiscoveryFilter['kind'], value: string) {
+function selectFilter(kind: DiscoveryFilter['kind'], value: DiscoveryFilter['value']) {
   const current = selectedFilter.value
   selectedFilter.value = current?.kind === kind && current.value === value ? null : { kind, value }
   searchQuery.value = ''
@@ -227,45 +243,47 @@ onUnmounted(() => {
 
     <div class="container explore-page__content">
       <section class="hero" aria-labelledby="hero-title">
-        <h1 id="hero-title">What are you<br />hungry for?</h1>
-        <p>Discover something worth cooking tonight.</p>
+        <h1 id="hero-title">{{ m.hero_title_first() }}<br />{{ m.hero_title_second() }}</h1>
+        <p>{{ m.hero_subtitle() }}</p>
 
         <div class="hero__search">
           <Search :size="21" :stroke-width="1.7" aria-hidden="true" />
-          <label class="visually-hidden" for="recipe-search">Search recipes by name</label>
+          <label class="visually-hidden" for="recipe-search">{{ m.search_label() }}</label>
           <input
             id="recipe-search"
             v-model="searchQuery"
             type="search"
-            placeholder="Search recipes by name..."
+            :placeholder="m.search_placeholder()"
             @input="onSearchInput"
           />
           <button
             v-if="searchQuery"
             type="button"
             class="hero__clear"
-            aria-label="Clear search"
+            :aria-label="m.search_clear()"
             @click="resetDiscovery"
           >
             <X :size="18" aria-hidden="true" />
           </button>
         </div>
 
-        <ul class="hero__shortcuts" aria-label="Meal shortcuts">
-          <li v-for="shortcut in shortcuts" :key="shortcut.label">
+        <ul class="hero__shortcuts" :aria-label="m.meal_shortcuts_label()">
+          <li v-for="shortcut in shortcuts" :key="shortcut.value">
             <button
               class="chip"
               :class="{
                 'chip--active':
-                  selectedFilter?.kind === shortcut.kind && selectedFilter.value === shortcut.label,
+                  selectedFilter?.kind === shortcut.kind && selectedFilter.value === shortcut.value,
               }"
               type="button"
               :aria-pressed="
-                selectedFilter?.kind === shortcut.kind && selectedFilter.value === shortcut.label
+                selectedFilter?.kind === shortcut.kind && selectedFilter.value === shortcut.value
               "
-              @click="selectFilter(shortcut.kind, shortcut.label)"
+              @click="selectFilter(shortcut.kind, shortcut.value)"
             >
-              <component :is="shortcut.icon" :size="18" aria-hidden="true" />{{ shortcut.label }}
+              <component :is="shortcut.icon" :size="18" aria-hidden="true" />{{
+                filterLabels[shortcut.value]()
+              }}
             </button>
           </li>
         </ul>
@@ -281,14 +299,14 @@ onUnmounted(() => {
 
       <section id="discover" class="discover" aria-labelledby="discover-title">
         <div class="discover__heading">
-          <h2 id="discover-title">Discover</h2>
+          <h2 id="discover-title">{{ m.discover_title() }}</h2>
           <p role="status">
-            {{ loading ? 'Loading recipes…' : `${total} ${total === 1 ? 'recipe' : 'recipes'}` }}
+            {{ loading ? m.discover_loading() : m.recipes_count({ count: total }) }}
           </p>
         </div>
 
         <div class="discover__toolbar">
-          <div class="discover__chips" aria-label="Recipe filters">
+          <div class="discover__chips" :aria-label="m.recipe_filters_label()">
             <button
               type="button"
               class="chip"
@@ -296,7 +314,7 @@ onUnmounted(() => {
               :aria-pressed="!searchQuery.trim() && !selectedFilter"
               @click="showAll"
             >
-              All
+              {{ m.filter_all() }}
             </button>
             <button
               v-for="tag in quickTags"
@@ -309,7 +327,7 @@ onUnmounted(() => {
               :aria-pressed="selectedFilter?.kind === 'tag' && selectedFilter.value === tag"
               @click="selectFilter('tag', tag)"
             >
-              {{ tag }}
+              {{ filterLabels[tag]() }}
             </button>
           </div>
           <div class="discover__actions">
@@ -319,13 +337,11 @@ onUnmounted(() => {
               @keydown.esc="closeFiltersOnEscape"
             >
               <summary class="chip">
-                <SlidersHorizontal :size="16" aria-hidden="true" />Filters<ChevronDown
-                  :size="15"
-                  aria-hidden="true"
-                />
+                <SlidersHorizontal :size="16" aria-hidden="true" />{{ m.filters_button()
+                }}<ChevronDown :size="15" aria-hidden="true" />
               </summary>
               <div class="discover__filter-options">
-                <p>Meal type</p>
+                <p>{{ m.filter_meal_type() }}</p>
                 <div>
                   <button
                     v-for="meal in mealTypes"
@@ -339,10 +355,10 @@ onUnmounted(() => {
                     :aria-pressed="selectedFilter?.kind === 'meal' && selectedFilter.value === meal"
                     @click="selectFilter('meal', meal)"
                   >
-                    {{ meal }}
+                    {{ filterLabels[meal]() }}
                   </button>
                 </div>
-                <p>Cuisine &amp; style</p>
+                <p>{{ m.filter_cuisine_style() }}</p>
                 <div>
                   <button
                     v-for="tag in moreTags"
@@ -356,25 +372,29 @@ onUnmounted(() => {
                     :aria-pressed="selectedFilter?.kind === 'tag' && selectedFilter.value === tag"
                     @click="selectFilter('tag', tag)"
                   >
-                    {{ tag }}
+                    {{ filterLabels[tag]() }}
                   </button>
                 </div>
               </div>
             </details>
-            <label class="visually-hidden" for="recipe-sort">Sort recipes</label>
+            <label class="visually-hidden" for="recipe-sort">{{ m.sort_label() }}</label>
             <select id="recipe-sort" class="chip discover__sort" :value="sort" @change="changeSort">
-              <option value="default">Sort: Default</option>
-              <option value="rating">Top rated</option>
-              <option value="name">A–Z</option>
+              <option value="default">{{ m.sort_default() }}</option>
+              <option value="rating">{{ m.sort_rating() }}</option>
+              <option value="name">{{ m.sort_name() }}</option>
             </select>
           </div>
         </div>
 
         <div v-if="hasDiscoverySelection" class="discover__selection">
-          <span v-if="searchQuery.trim()">Search: “{{ searchQuery.trim() }}”</span>
-          <span v-else-if="selectedFilter">{{ selectedFilter.value }}</span>
-          <span v-if="sort !== 'default'">{{ sort === 'rating' ? 'Top rated' : 'A–Z' }}</span>
-          <button type="button" @click="resetDiscovery">Clear filters</button>
+          <span v-if="searchQuery.trim()">{{
+            m.search_selection({ query: searchQuery.trim() })
+          }}</span>
+          <span v-else-if="selectedFilter">{{ filterLabels[selectedFilter.value]() }}</span>
+          <span v-if="sort !== 'default'">{{
+            sort === 'rating' ? m.sort_rating() : m.sort_name()
+          }}</span>
+          <button type="button" @click="resetDiscovery">{{ m.clear_filters() }}</button>
         </div>
 
         <template v-if="loading">
@@ -386,17 +406,17 @@ onUnmounted(() => {
           </div>
         </template>
         <div v-else-if="error" class="state-panel" role="alert">
-          <h3>We couldn't load the recipes.</h3>
-          <p>Something went wrong while contacting the service. Please try again.</p>
+          <h3>{{ m.explore_error_title() }}</h3>
+          <p>{{ m.explore_error_body() }}</p>
           <button class="button button--primary" type="button" @click="loadDiscovery">
-            Try again
+            {{ m.try_again() }}
           </button>
         </div>
         <div v-else-if="recipes.length === 0" class="state-panel">
-          <h3>Nothing on the menu.</h3>
-          <p>Try another search or clear your filters.</p>
+          <h3>{{ m.explore_empty_title() }}</h3>
+          <p>{{ m.explore_empty_body() }}</p>
           <button class="button button--secondary" type="button" @click="resetDiscovery">
-            Clear filters
+            {{ m.clear_filters() }}
           </button>
         </div>
         <template v-else>
@@ -405,7 +425,7 @@ onUnmounted(() => {
           </div>
           <div class="discover__footer">
             <p v-if="loadMoreError" class="discover__error" role="alert">
-              We couldn't load more recipes. Please try again.
+              {{ m.load_more_error() }}
             </p>
             <button
               v-if="hasMore"
@@ -414,10 +434,10 @@ onUnmounted(() => {
               :disabled="loadingMore"
               @click="loadMore"
             >
-              {{ loadingMore ? 'Loading…' : 'Load more'
+              {{ loadingMore ? m.loading_short() : m.load_more()
               }}<ChevronDown v-if="!loadingMore" :size="17" aria-hidden="true" />
             </button>
-            <p v-else class="discover__end">You've seen every recipe.</p>
+            <p v-else class="discover__end">{{ m.discover_end() }}</p>
           </div>
         </template>
       </section>

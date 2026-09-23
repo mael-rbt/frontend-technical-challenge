@@ -9,6 +9,9 @@ node_modules/
 dist/
 build/
 .vite/
+src/paraglide/
+project.inlang/cache/
+project.inlang/README.md
 
 # Test outputs
 coverage/

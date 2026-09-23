@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { Heart } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
+import * as m from '../paraglide/messages.js'
+import { getLocale, setLocale, toLocale } from '../paraglide/runtime.js'
+
+const currentLocale = getLocale()
+
+function changeLocale(event: Event) {
+  const locale = toLocale((event.target as HTMLSelectElement).value)
+  if (locale && locale !== getLocale()) void setLocale(locale)
+}
 </script>
 
 <template>
@@ -8,16 +17,31 @@ import { RouterLink } from 'vue-router'
     <div class="container site-header__inner">
       <RouterLink class="brand" to="/">
         <span class="brand__name">Mise</span>
-        <span class="brand__tagline">Good food<br />brighter days</span>
+        <span class="brand__tagline"
+          >{{ m.brand_tagline_top() }}<br />{{ m.brand_tagline_bottom() }}</span
+        >
       </RouterLink>
 
-      <nav class="site-nav" aria-label="Main navigation">
-        <RouterLink class="site-nav__link" to="/">Explore</RouterLink>
-        <RouterLink class="site-nav__link" to="/saved">
-          Saved
-          <Heart :size="21" :stroke-width="1.7" aria-hidden="true" />
-        </RouterLink>
-      </nav>
+      <div class="site-header__actions">
+        <nav class="site-nav" :aria-label="m.nav_main_label()">
+          <RouterLink class="site-nav__link" to="/">{{ m.nav_explore() }}</RouterLink>
+          <RouterLink class="site-nav__link" to="/saved">
+            {{ m.nav_saved() }}
+            <Heart :size="21" :stroke-width="1.7" aria-hidden="true" />
+          </RouterLink>
+        </nav>
+        <label class="visually-hidden" for="language-select">{{ m.language_label() }}</label>
+        <select
+          id="language-select"
+          class="language-select"
+          :value="currentLocale"
+          @change="changeLocale"
+        >
+          <option value="en">EN</option>
+          <option value="de">DE</option>
+          <option value="fr">FR</option>
+        </select>
+      </div>
     </div>
   </header>
 </template>
@@ -70,6 +94,25 @@ import { RouterLink } from 'vue-router'
   font-size: 0.95rem;
 }
 
+.site-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.language-select {
+  min-width: 3.75rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.4rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
 .site-nav__link {
   display: inline-flex;
   align-items: center;
@@ -100,12 +143,28 @@ import { RouterLink } from 'vue-router'
   }
 
   .site-nav {
-    gap: 1.25rem;
+    gap: 0.65rem;
     font-size: 0.875rem;
+  }
+
+  .site-header__actions {
+    gap: 0.65rem;
   }
 
   .site-nav__link {
     gap: 0.45rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .site-header__inner {
+    flex-direction: column;
+    align-items: stretch;
+    padding-block: 0.35rem;
+  }
+
+  .site-header__actions {
+    justify-content: space-between;
   }
 }
 </style>

@@ -13,6 +13,7 @@ import {
 import type { Recipe } from '../types/recipe'
 import tomatoCluster from '../assets/decor/tomato-cluster.webp'
 import basilCorner from '../assets/decor/basil-corner.webp'
+import * as m from '../paraglide/messages.js'
 
 const route = useRoute()
 const { isFavorite, toggleFavorite } = useFavorites()
@@ -112,11 +113,11 @@ onUnmounted(() => controller?.abort())
 
     <div class="container detail-page__content">
       <RouterLink class="detail-page__back" to="/">
-        <ArrowLeft :size="18" aria-hidden="true" />Back to recipes
+        <ArrowLeft :size="18" aria-hidden="true" />{{ m.recipe_back() }}
       </RouterLink>
 
       <template v-if="loading">
-        <p class="visually-hidden" role="status">Loading recipe…</p>
+        <p class="visually-hidden" role="status">{{ m.recipe_loading() }}</p>
         <div class="detail-skeleton" aria-hidden="true">
           <div class="detail-skeleton__image"></div>
           <div class="detail-skeleton__copy">
@@ -135,18 +136,10 @@ onUnmounted(() => controller?.abort())
         :role="error === 'request' ? 'alert' : undefined"
       >
         <h1>
-          {{
-            error === 'not-found'
-              ? "This recipe isn't on the menu."
-              : "We couldn't load this recipe."
-          }}
+          {{ error === 'not-found' ? m.recipe_not_found_title() : m.recipe_error_title() }}
         </h1>
         <p>
-          {{
-            error === 'not-found'
-              ? 'Try another recipe from Explore.'
-              : 'The recipe service is unavailable. Please try again.'
-          }}
+          {{ error === 'not-found' ? m.recipe_not_found_body() : m.recipe_error_body() }}
         </p>
         <div class="detail-state__actions">
           <button
@@ -155,9 +148,9 @@ onUnmounted(() => controller?.abort())
             type="button"
             @click="loadRecipe(route.params.id)"
           >
-            Try again
+            {{ m.try_again() }}
           </button>
-          <RouterLink class="button button--secondary" to="/">Back to Explore</RouterLink>
+          <RouterLink class="button button--secondary" to="/">{{ m.back_explore() }}</RouterLink>
         </div>
       </section>
 
@@ -166,7 +159,7 @@ onUnmounted(() => controller?.abort())
           <div class="detail-hero__image">
             <img
               :src="recipe.image"
-              :alt="`${recipe.name} prepared dish`"
+              :alt="m.recipe_image_alt({ name: recipe.name })"
               width="600"
               height="450"
             />
@@ -176,44 +169,52 @@ onUnmounted(() => controller?.abort())
             <h1>{{ recipe.name }}</h1>
             <p class="detail-hero__rating">
               <Star :size="20" aria-hidden="true" />
-              <strong>{{ recipe.rating.toFixed(1) }}</strong> ({{ recipe.reviewCount }} reviews)
+              <strong>{{ recipe.rating.toFixed(1) }}</strong> ({{
+                m.reviews_count({ count: recipe.reviewCount })
+              }})
             </p>
             <dl class="detail-hero__facts">
               <div>
-                <dt>Prep time</dt>
-                <dd>{{ recipe.prepTimeMinutes }} min</dd>
+                <dt>{{ m.recipe_prep_time() }}</dt>
+                <dd>{{ m.duration_short({ count: recipe.prepTimeMinutes }) }}</dd>
               </div>
               <div>
-                <dt>Cook time</dt>
-                <dd>{{ recipe.cookTimeMinutes }} min</dd>
+                <dt>{{ m.recipe_cook_time() }}</dt>
+                <dd>{{ m.duration_short({ count: recipe.cookTimeMinutes }) }}</dd>
               </div>
               <div>
-                <dt>Difficulty</dt>
+                <dt>{{ m.recipe_difficulty() }}</dt>
                 <dd>{{ recipe.difficulty }}</dd>
               </div>
               <div>
-                <dt>Per serving</dt>
+                <dt>{{ m.recipe_per_serving() }}</dt>
                 <dd>{{ recipe.caloriesPerServing }} kcal</dd>
               </div>
               <div>
-                <dt>Servings</dt>
+                <dt>{{ m.recipe_servings() }}</dt>
                 <dd>{{ recipe.servings }}</dd>
               </div>
               <div>
-                <dt>Total time</dt>
-                <dd>{{ recipe.prepTimeMinutes + recipe.cookTimeMinutes }} min</dd>
+                <dt>{{ m.recipe_total_time() }}</dt>
+                <dd>
+                  {{ m.duration_short({ count: recipe.prepTimeMinutes + recipe.cookTimeMinutes }) }}
+                </dd>
               </div>
             </dl>
             <button
               class="button detail-hero__save"
               :class="isSaved ? 'button--secondary' : 'button--primary'"
               type="button"
-              :aria-label="`${isSaved ? 'Remove' : 'Add'} ${recipe.name} ${isSaved ? 'from' : 'to'} favorites`"
+              :aria-label="
+                isSaved
+                  ? m.favorite_remove({ name: recipe.name })
+                  : m.favorite_add({ name: recipe.name })
+              "
               :aria-pressed="isSaved"
               @click="toggleFavorite(recipe.id)"
             >
               <Heart :size="18" :fill="isSaved ? 'currentColor' : 'none'" aria-hidden="true" />
-              {{ isSaved ? 'Saved' : 'Save recipe' }}
+              {{ isSaved ? m.recipe_saved() : m.recipe_save() }}
             </button>
           </div>
         </article>
@@ -221,8 +222,8 @@ onUnmounted(() => controller?.abort())
         <div class="detail-body">
           <section class="detail-ingredients" aria-labelledby="ingredients-title">
             <div class="detail-section-heading">
-              <h2 id="ingredients-title">Ingredients</h2>
-              <p>{{ recipe.servings }} servings</p>
+              <h2 id="ingredients-title">{{ m.recipe_ingredients() }}</h2>
+              <p>{{ m.servings_count({ count: recipe.servings }) }}</p>
             </div>
             <ul>
               <li v-for="(ingredient, index) in recipe.ingredients" :key="index">
@@ -239,12 +240,12 @@ onUnmounted(() => controller?.abort())
               type="button"
               @click="toggleAllIngredients"
             >
-              {{ allChecked ? 'Uncheck all' : 'Check all' }}
+              {{ allChecked ? m.recipe_uncheck_all() : m.recipe_check_all() }}
             </button>
           </section>
 
           <section class="detail-instructions" aria-labelledby="instructions-title">
-            <h2 id="instructions-title">Instructions</h2>
+            <h2 id="instructions-title">{{ m.recipe_instructions() }}</h2>
             <ol>
               <li v-for="(instruction, index) in recipe.instructions" :key="index">
                 <span class="detail-instructions__number" aria-hidden="true">{{
@@ -257,7 +258,7 @@ onUnmounted(() => controller?.abort())
         </div>
 
         <section v-if="recipe.tags.length" class="detail-tags" aria-labelledby="tags-title">
-          <h2 id="tags-title">Tags</h2>
+          <h2 id="tags-title">{{ m.recipe_tags() }}</h2>
           <ul>
             <li v-for="tag in recipe.tags" :key="tag" class="chip">{{ tag }}</li>
           </ul>
@@ -269,9 +270,9 @@ onUnmounted(() => controller?.abort())
           aria-labelledby="related-title"
         >
           <div class="detail-related__heading">
-            <h2 id="related-title">You may also like</h2>
+            <h2 id="related-title">{{ m.recipe_related() }}</h2>
             <RouterLink to="/"
-              >Explore more recipes <ArrowRight :size="18" aria-hidden="true"
+              >{{ m.recipe_explore_more() }} <ArrowRight :size="18" aria-hidden="true"
             /></RouterLink>
           </div>
           <div class="detail-related__grid">

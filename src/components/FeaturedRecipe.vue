@@ -2,6 +2,7 @@
 import { ArrowRight, Clock3, Star, UsersRound } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 import type { Recipe } from '../types/recipe'
+import * as m from '../paraglide/messages.js'
 
 defineProps<{ recipe: Recipe }>()
 </script>
@@ -9,11 +10,16 @@ defineProps<{ recipe: Recipe }>()
 <template>
   <section class="featured" aria-labelledby="featured-title">
     <div class="featured__image-wrap">
-      <img :src="recipe.image" :alt="`${recipe.name} prepared dish`" width="600" height="400" />
+      <img
+        :src="recipe.image"
+        :alt="m.recipe_image_alt({ name: recipe.name })"
+        width="600"
+        height="400"
+      />
     </div>
 
     <div class="featured__main">
-      <p class="featured__eyebrow">Tonight's inspiration</p>
+      <p class="featured__eyebrow">{{ m.featured_eyebrow() }}</p>
       <h2 id="featured-title">{{ recipe.name }}</h2>
       <p class="featured__ingredients">
         {{ recipe.ingredients.slice(0, 3).join(' · ') }}
@@ -21,7 +27,7 @@ defineProps<{ recipe: Recipe }>()
       <div class="featured__meta">
         <span>
           <Clock3 :size="17" :stroke-width="1.7" aria-hidden="true" />
-          {{ recipe.prepTimeMinutes + recipe.cookTimeMinutes }} min
+          {{ m.duration_short({ count: recipe.prepTimeMinutes + recipe.cookTimeMinutes }) }}
         </span>
         <span>{{ recipe.difficulty }}</span>
         <span>
@@ -30,30 +36,34 @@ defineProps<{ recipe: Recipe }>()
         </span>
       </div>
       <RouterLink class="button button--primary featured__action" :to="`/recipes/${recipe.id}`">
-        View recipe <ArrowRight :size="17" :stroke-width="1.7" aria-hidden="true" />
+        {{ m.featured_view_recipe() }}
+        <ArrowRight :size="17" :stroke-width="1.7" aria-hidden="true" />
       </RouterLink>
     </div>
 
     <div class="featured__aside">
-      <h3>At a glance</h3>
+      <h3>{{ m.featured_at_glance() }}</h3>
       <div class="featured__fact">
         <Clock3 :size="25" :stroke-width="1.5" aria-hidden="true" />
         <p>
-          <strong>{{ recipe.prepTimeMinutes + recipe.cookTimeMinutes }} minutes</strong
-          ><span>Prep to plate</span>
+          <strong>{{
+            m.minutes_count({ count: recipe.prepTimeMinutes + recipe.cookTimeMinutes })
+          }}</strong
+          ><span>{{ m.featured_prep_to_plate() }}</span>
         </p>
       </div>
       <div class="featured__fact">
         <UsersRound :size="25" :stroke-width="1.5" aria-hidden="true" />
         <p>
-          <strong>{{ recipe.servings }} servings</strong><span>Made to share</span>
+          <strong>{{ m.servings_count({ count: recipe.servings }) }}</strong
+          ><span>{{ m.featured_made_to_share() }}</span>
         </p>
       </div>
       <div class="featured__fact">
         <Star :size="25" :stroke-width="1.5" aria-hidden="true" />
         <p>
-          <strong>{{ recipe.reviewCount }} reviews</strong
-          ><span>Rated {{ recipe.rating.toFixed(1) }} out of 5</span>
+          <strong>{{ m.reviews_count({ count: recipe.reviewCount }) }}</strong
+          ><span>{{ m.featured_rated({ rating: recipe.rating.toFixed(1) }) }}</span>
         </p>
       </div>
     </div>

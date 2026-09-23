@@ -4,6 +4,7 @@ import { Clock3, Heart, Star } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 import { useFavorites } from '../composables/useFavorites'
 import type { Recipe } from '../types/recipe'
+import * as m from '../paraglide/messages.js'
 
 const props = withDefaults(defineProps<{ recipe: Recipe; headingLevel?: 2 | 3 }>(), {
   headingLevel: 3,
@@ -24,7 +25,7 @@ function toggleSaved(event: MouseEvent) {
       <div class="recipe-card__image-wrap">
         <img
           :src="recipe.image"
-          :alt="`${recipe.name} prepared dish`"
+          :alt="m.recipe_image_alt({ name: recipe.name })"
           width="400"
           height="300"
           loading="lazy"
@@ -36,7 +37,7 @@ function toggleSaved(event: MouseEvent) {
         <div class="recipe-card__meta">
           <span>
             <Clock3 :size="15" :stroke-width="1.7" aria-hidden="true" />
-            {{ recipe.prepTimeMinutes + recipe.cookTimeMinutes }} min
+            {{ m.duration_short({ count: recipe.prepTimeMinutes + recipe.cookTimeMinutes }) }}
           </span>
           <span>
             <Star :size="15" :stroke-width="1.7" aria-hidden="true" />
@@ -48,7 +49,9 @@ function toggleSaved(event: MouseEvent) {
     <button
       class="recipe-card__save"
       type="button"
-      :aria-label="`${saved ? 'Remove' : 'Add'} ${recipe.name} ${saved ? 'from' : 'to'} favorites`"
+      :aria-label="
+        saved ? m.favorite_remove({ name: recipe.name }) : m.favorite_add({ name: recipe.name })
+      "
       :aria-pressed="saved"
       @click="toggleSaved"
     >

@@ -6,6 +6,7 @@ import RecipeCard from '../components/RecipeCard.vue'
 import { useFavorites } from '../composables/useFavorites'
 import { getRecipeById } from '../services/recipes.api'
 import type { Recipe } from '../types/recipe'
+import * as m from '../paraglide/messages.js'
 
 const { favoriteIds } = useFavorites()
 const fetchedRecipes = ref<Recipe[]>([])
@@ -65,19 +66,19 @@ onUnmounted(() => controller?.abort())
   <main class="saved-page">
     <div class="container">
       <header class="saved-page__heading">
-        <h1>Saved recipes</h1>
-        <p>Your favorite recipes, kept for later.</p>
+        <h1>{{ m.saved_title() }}</h1>
+        <p>{{ m.saved_subtitle() }}</p>
       </header>
 
       <section v-if="favoriteIds.length === 0" class="saved-state" aria-labelledby="saved-empty">
         <Heart :size="34" :stroke-width="1.4" aria-hidden="true" />
-        <h2 id="saved-empty" ref="emptyHeading" tabindex="-1">Nothing saved yet.</h2>
-        <p>Keep the recipes you love close at hand.</p>
-        <RouterLink class="button button--primary" to="/">Explore recipes</RouterLink>
+        <h2 id="saved-empty" ref="emptyHeading" tabindex="-1">{{ m.saved_empty_title() }}</h2>
+        <p>{{ m.saved_empty_body() }}</p>
+        <RouterLink class="button button--primary" to="/">{{ m.saved_explore() }}</RouterLink>
       </section>
 
       <template v-else-if="loading">
-        <p class="visually-hidden" role="status">Loading your saved recipes…</p>
+        <p class="visually-hidden" role="status">{{ m.saved_loading() }}</p>
         <div class="saved-grid" aria-hidden="true">
           <div v-for="index in Math.min(favoriteIds.length, 3)" :key="index" class="saved-skeleton">
             <div class="saved-skeleton__image"></div>
@@ -92,18 +93,18 @@ onUnmounted(() => controller?.abort())
         aria-labelledby="saved-error"
         role="alert"
       >
-        <h2 id="saved-error">We couldn't load your saved recipes.</h2>
-        <p>Your favorites are still saved. Please try again.</p>
+        <h2 id="saved-error">{{ m.saved_error_title() }}</h2>
+        <p>{{ m.saved_error_body() }}</p>
         <button ref="retryButton" class="button button--primary" type="button" @click="loadSaved">
-          Try again
+          {{ m.try_again() }}
         </button>
       </section>
 
       <template v-else>
         <div v-if="error" class="saved-page__notice" role="alert">
-          <p>Some saved recipes couldn't be loaded. Your favorites are still saved.</p>
+          <p>{{ m.saved_partial_error() }}</p>
           <button class="button button--secondary" type="button" @click="loadSaved">
-            Try again
+            {{ m.try_again() }}
           </button>
         </div>
         <div ref="savedGrid" class="saved-grid">
