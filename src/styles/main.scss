@@ -1,0 +1,21 @@
+@use 'tokens';
+@use 'reset';
+@use 'mixins';
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  @include mixins.focus-ring;
+}
+
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}

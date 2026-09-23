@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+cypress/screenshots/
+cypress/videos/
+pnpm-lock.yaml
+AGENTS.md
+.codex/
+docs/

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["vite.config.ts", "cypress.config.ts"],
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "module": "preserve",
+    "moduleResolution": "bundler"
+  }
+}
